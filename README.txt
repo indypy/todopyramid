@@ -99,6 +99,138 @@ This will include all the boilerplate code from the alchemy template.
 
 ### Remove boilerplate
 
-For our purposes, we won't need some of the boilerplate code that has been added.
+For our purposes, we won't need some of the boilerplate code that has been added. We'll just get rid of it.
+
+```
+(todopyramid)$ git rm static/*
+(todopyramid)$ touch static/.gitignore
+(todopyramid)$ git add static/.gitignore
+(todopyramid)$ git rm templates/*
+(todopyramid)$ git commit -m 'removing boilerplate templates'
+```
+
+We've put a `.gitignore` in the `static` dir so that the directory stays in place. We'll add templates to the `templates` dir soon, so it isn't necessary for that dir.
+
+### Let's get fancy
+
+Now we are ready to start adding our customizations. First thing we want to do is add in Bootstrap to ease creation of layouts. Since we will be using [Deform][deform] to create forms later on, we will use the [deform_bootstrap][deform_bootstrap] package.
+
+Add it to the `setup.py`
+
+```
+requires = [
+    # ...
+    'deform_bootstrap',
+]
+```
+
+Then we need to pull in its dependencies (which includes Deform itself). Then update the `requirements.txt` file.
+
+```
+(todopyramid)$ python2.7 setup.py develop
+(todopyramid)$ pip freeze > requirements.txt
+```
+
+Then add the static resources to the `__init__.py`
+
+```
+# Adding the static resources from Deform
+config.add_static_view('deform_static', 'deform:static', cache_max_age=3600)
+config.add_static_view('deform_bootstrap_static', 'deform_bootstrap:static', cache_max_age=3600)
+```
+
+Now we need to get our template structure in place. We'll add a `todopyramid/layouts.py` with the following:
+
+```
+ifrom pyramid.renderers import get_renderer
+from pyramid.decorator import reify
+
+
+class Layouts(object):
+
+    @reify
+    def global_template(self):
+        renderer = get_renderer("templates/global_layout.pt")
+        return renderer.implementation().macros['layout']
+```
+
+Add the `global_layout.pt` with at least the following (look at the source code for the complete template):
+
+```
+<!DOCTYPE html>
+ <!-- The layout macro below is what is referenced in the layouts.Laytouts.global_template -->
+<html lang="en"
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:metal="http://xml.zope.org/namespaces/metal"
+    xmlns:tal="http://xml.zope.org/namespaces/tal"
+    metal:define-macro="layout">
+  <head>
+
+    <!-- Styles from Deform Bootstrap -->
+    <link rel="stylesheet" href="${request.static_url('deform_bootstrap:static/deform_bootstrap.css')}" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="${request.static_url('deform_bootstrap:static/chosen_bootstrap.css')}" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="${request.static_url('deform:static/css/ui-lightness/jquery-ui-1.8.11.custom.css')}" type="text/css" media="screen" charset="utf-8" />
+  </head>
+
+  <body>
+    <div class="container">
+        <!-- This is where our subsequent templates will fill in content -->
+        <div metal:define-slot="content">
+          Site content goes here
+        </div>
+    </div>
+
+    <!-- The javascript resources from Deform -->
+    <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-1.8.18.custom.min.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-timepicker-addon-0.9.9.js')}"></script>
+    <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap-datepicker.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap-typeahead.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/jquery.form-2.96.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/jquery.maskedinput-1.3.js')}"></script>
+  </body>
+</html>
+```
+
+Now we have to modify our boilerplate view to use the layout in `todopyramid/views.py`, notice that we've also changed the view name and template name to reflect what this view does, showing the `home` page.
+
+```
+from .layouts import Layouts
+
+
+class ToDoViews(Layouts):
+
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
+
+    @view_config(route_name='home', renderer='templates/home.pt')
+    def home_view(request):
+        # view code here
+```
+
+Now we can add a `todopyramid/templates/home.pt` to our app with the following
+
+```
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  </head>
+
+  <body metal:use-macro="view.global_template">
+    <div metal:fill-slot="content">
+      <h1>Home</h1>
+      <p>Welcome to the Pyramid version of the ToDo app.</p>
+    </div>
+  </body>
+</html>
+```
+
+Now subsequent templates can be set up in the same manner.
 
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html
+[deform]: http://docs.pylonsproject.org/projects/deform/en/latest/
+[deform_bootstrap]: http://pypi.python.org/pypi/deform_bootstrap

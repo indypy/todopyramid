@@ -1,4 +1,5 @@
 -f http://dist.sixfeetup.com/public/
+.
 Chameleon==2.11
 Mako==0.7.3
 MarkupSafe==0.15

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:metal="http://xml.zope.org/namespaces/metal"
+    xmlns:tal="http://xml.zope.org/namespaces/tal"
+    metal:define-macro="layout">
+  <head>
+    <meta charset="utf-8">
+    <title>ToDo Pyramid</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The Pyramid version of the todo app">
+    <meta name="author" content="Six Feet Up, Inc.">
+
+    <!-- Le styles -->
+    <link rel="stylesheet" href="${request.static_url('deform_bootstrap:static/deform_bootstrap.css')}" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="${request.static_url('deform_bootstrap:static/chosen_bootstrap.css')}" type="text/css" media="screen" charset="utf-8" />
+    <link rel="stylesheet" href="${request.static_url('deform:static/css/ui-lightness/jquery-ui-1.8.11.custom.css')}" type="text/css" media="screen" charset="utf-8" />
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">ToDo Pyramid</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active"><a href="#">Home</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+        <div metal:define-slot="content">
+          Site content goes here
+        </div>
+    </div>
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-1.8.18.custom.min.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-timepicker-addon-0.9.9.js')}"></script>
+    <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap-datepicker.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap-typeahead.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/jquery.form-2.96.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/jquery.maskedinput-1.3.js')}"></script>
+  </body>
+</html>
+

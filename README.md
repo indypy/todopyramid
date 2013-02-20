@@ -16,7 +16,7 @@ $ cd todopyramid
 $ source bin/activate
 ```
 
-This creates the new virtual environemnt, now you can install the app.
+This creates the new virtual environment, now you can install the app.
 
 ```
 (todopyramid)$ cd ~/Desktop
@@ -35,7 +35,7 @@ Now go to <http://localhost:6543> and enjoy!
 
 ## How the sausage was made
 
-The above install directions tell you how to get the finished application started. here we will document how the app was created from scratch.
+The above install directions tell you how to get the finished application started. Here we will document how the app was created from scratch.
 
 ### First steps
 

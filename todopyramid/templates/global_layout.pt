@@ -50,6 +50,11 @@
 
     </div>
 
+    <footer class="pagination-centered container">
+      <hr/>
+      <p>Created by Six Feet Up, Inc. &mdash; Get the code on <a href="https://github.com/indypy/todopyramid#readme">GitHub</a></p>
+    </footer>
+
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->

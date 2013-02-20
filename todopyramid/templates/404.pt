@@ -1,0 +1,8 @@
+<metal:master use-macro="view.global_template">
+  <div class="hero-unit" metal:fill-slot="content">
+    <h1>404 Not Found</h1>
+    <p>This page is no more! It has ceased to be! Bereft of life, an ex-page</p>
+    <br/>
+    <iframe width="640" height="360" src="http://www.youtube.com/embed/npjOSLCR2hE?rel=0" frameborder="0" allowfullscreen></iframe>
+  </div>
+</metal:master>

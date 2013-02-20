@@ -239,8 +239,13 @@ Following the documentation for the personas plugin, we add it to the dependenci
 
 We also override the default forbidden view in order to integrate a login form into our global template layout.
 
+### Not Found
+
+In order to keep up appearances, we add a custom Not Found view that integrates into our global layout. This is quite simple using the [pyramid.view.notfound_view_config][notfound]
+
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html
 [deform]: http://docs.pylonsproject.org/projects/deform/en/latest/
 [deform_bootstrap]: http://pypi.python.org/pypi/deform_bootstrap
 [persona]: https://login.persona.org/
 [pyramid_persona]: https://pyramid_persona.readthedocs.org/en/latest/
+[notfound]: http://docs.pylonsproject.org/projects/pyramid/en/latest/api/view.html#pyramid.view.notfound_view_config

@@ -1,5 +1,6 @@
 from pyramid.response import Response
 from pyramid.view import forbidden_view_config
+from pyramid.view import notfound_view_config
 from pyramid.view import view_config
 
 from sqlalchemy.exc import DBAPIError
@@ -16,6 +17,10 @@ class ToDoViews(Layouts):
     def __init__(self, context, request):
         self.context = context
         self.request = request
+
+    @notfound_view_config(renderer='templates/404.pt')
+    def notfound(request):
+        return {}
 
     @forbidden_view_config(renderer='templates/signin.pt')
     def forbidden(request):

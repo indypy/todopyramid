@@ -139,7 +139,7 @@ config.add_static_view('deform_static', 'deform:static', cache_max_age=3600)
 config.add_static_view('deform_bootstrap_static', 'deform_bootstrap:static', cache_max_age=3600)
 ```
 
-Now we need to get our template structure in place. We'll add a `todopyramid/layouts.py` with the following:
+Now we need to get our template structure in place. We'll add a `todopyramid/layouts.py` with the following (see the [Creating a Custom UX for Pyramid][customux] tutorial for more details):
 
 ```
 ifrom pyramid.renderers import get_renderer
@@ -159,11 +159,7 @@ Add the `global_layout.pt` with at least the following (look at the source code 
 ```
 <!DOCTYPE html>
  <!-- The layout macro below is what is referenced in the layouts.Laytouts.global_template -->
-<html lang="en"
-    xmlns="http://www.w3.org/1999/xhtml"
-    xmlns:metal="http://xml.zope.org/namespaces/metal"
-    xmlns:tal="http://xml.zope.org/namespaces/tal"
-    metal:define-macro="layout">
+<html lang="en" metal:define-macro="layout">
   <head>
 
     <!-- Styles from Deform Bootstrap -->
@@ -210,23 +206,18 @@ class ToDoViews(Layouts):
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(request):
         # view code here
+        return {}
 ```
 
 Now we can add a `todopyramid/templates/home.pt` to our app with the following
 
 ```
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-  </head>
-
-  <body metal:use-macro="view.global_template">
-    <div metal:fill-slot="content">
-      <h1>Home</h1>
-      <p>Welcome to the Pyramid version of the ToDo app.</p>
-    </div>
-  </body>
-</html>
+<metal: master use-macro="view.global_template">
+  <div metal:fill-slot="content">
+    <h1>Home</h1>
+    <p>Welcome to the Pyramid version of the ToDo app.</p>
+  </div>
+</metal:master>
 ```
 
 Now subsequent templates can be set up in the same manner.
@@ -246,6 +237,7 @@ In order to keep up appearances, we add a custom Not Found view that integrates 
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html
 [deform]: http://docs.pylonsproject.org/projects/deform/en/latest/
 [deform_bootstrap]: http://pypi.python.org/pypi/deform_bootstrap
+[customux]: http://docs.pylonsproject.org/projects/pyramid_tutorials/en/latest/humans/creatingux/step05/index.html
 [persona]: https://login.persona.org/
 [pyramid_persona]: https://pyramid_persona.readthedocs.org/en/latest/
 [notfound]: http://docs.pylonsproject.org/projects/pyramid/en/latest/api/view.html#pyramid.view.notfound_view_config

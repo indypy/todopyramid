@@ -44,6 +44,11 @@
     </div>
 
     <div class="container">
+      <div class="page-header"
+           tal:condition="page_title">
+        <h1>${page_title}</h1>
+      </div>
+
       <metal:content define-slot="content">
         Site content goes here
       </metal:content>

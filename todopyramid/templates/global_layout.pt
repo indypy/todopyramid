@@ -16,7 +16,8 @@
           href="${request.static_url('deform:static/css/ui-lightness/jquery-ui-1.8.11.custom.css')}" />
     <style>
       body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+        /* 60px to make the container go all the way to the bottom of the topbar */
+        padding-top: 60px;
       }
     </style>
   </head>

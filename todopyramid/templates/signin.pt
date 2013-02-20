@@ -1,0 +1,8 @@
+<metal:master use-macro="view.global_template">
+  <div class="hero-unit" metal:fill-slot="content">
+    <h1>None Shall Pass</h1>
+    <p>This page moves for no man. But we'll call it a draw if you login using your <a href="https://login.persona.org/">Mozilla Persona</a></p>
+    <br/>
+    <p>${request.persona_button}</p>
+  </div>
+</metal:master>

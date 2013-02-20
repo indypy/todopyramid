@@ -231,6 +231,16 @@ Now we can add a `todopyramid/templates/home.pt` to our app with the following
 
 Now subsequent templates can be set up in the same manner.
 
+### Authentication
+
+Our app will need to authorize users in order to be able to add a ToDo list. Pyramid, having no opinions on the matter, leaves us with a myriad of options. One quick way is to utilize the [Mozilla Persona][persona] login system. There just so happens to be a plugin for this called [pyramid_persona][pyramid_persona]
+
+Following the documentation for the personas plugin, we add it to the dependencies of our app, build the latest version and include the plugin in our config.
+
+We also override the default forbidden view in order to integrate a login form into our global template layout.
+
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html
 [deform]: http://docs.pylonsproject.org/projects/deform/en/latest/
 [deform_bootstrap]: http://pypi.python.org/pypi/deform_bootstrap
+[persona]: https://login.persona.org/
+[pyramid_persona]: https://pyramid_persona.readthedocs.org/en/latest/

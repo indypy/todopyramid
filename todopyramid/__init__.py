@@ -14,6 +14,7 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
     config = Configurator(settings=settings)
+    config.include('pyramid_persona')
     config.add_static_view('static', 'static', cache_max_age=3600)
     # Adding the static resources from Deform
     config.add_static_view(

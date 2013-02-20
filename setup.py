@@ -15,6 +15,7 @@ requires = [
     'zope.sqlalchemy',
     'waitress',
     'deform_bootstrap',
+    'pyramid_persona',
 ]
 
 setup(

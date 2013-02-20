@@ -43,9 +43,10 @@
     </div>
 
     <div class="container">
-        <div metal:define-slot="content">
-          Site content goes here
-        </div>
+      <metal:content define-slot="content">
+        Site content goes here
+      </metal:content>
+
     </div>
 
     <!-- Le javascript

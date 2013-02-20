@@ -6,10 +6,8 @@ from pyramid.view import view_config
 from sqlalchemy.exc import DBAPIError
 
 from .layouts import Layouts
-from .models import (
-    DBSession,
-    MyModel,
-    )
+from .models import DBSession
+from .models import TodoItem
 
 
 class ToDoViews(Layouts):
@@ -29,12 +27,11 @@ class ToDoViews(Layouts):
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(request):
         try:
-            one = DBSession.query(MyModel).filter(
-                MyModel.name == 'one').first()
+            count = DBSession.query(TodoItem).count()
         except DBAPIError:
             return Response(
                 conn_err_msg, content_type='text/plain', status_int=500)
-        return {'page_title': 'Home', 'nav': 'home'}
+        return {'count': count, 'section': 'home'}
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem

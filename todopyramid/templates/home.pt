@@ -1,5 +1,8 @@
 <metal:master use-macro="view.global_template">
-  <div metal:fill-slot="content">
-    <p>Welcome to the Pyramid version of the ToDo app.</p>
+  <div class="hero-unit" metal:fill-slot="content">
+    <h1>Welcome!</h1>
+    <br/>
+    <p>It is good to have you back Clayton. You have <span class="badge badge-success">${count}</span> task<tal:plural condition="count > 1">s</tal:plural> to take care of.</p>
+    <p>What are you going to get done today?</p>
   </div>
 </metal:master>

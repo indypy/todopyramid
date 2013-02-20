@@ -234,6 +234,12 @@ We also override the default forbidden view in order to integrate a login form i
 
 In order to keep up appearances, we add a custom Not Found view that integrates into our global layout. This is quite simple using the [pyramid.view.notfound_view_config][notfound]
 
+### Models
+
+Now that we have created the shell for our app, it is time to create some models. We will be utilizing [SQLAlchemy][sqlalchemy] in this case since it fits the needs of our application.
+
+We will create a `TodoItem` and `Tag` model to start out with. This will give us the basis for our todo list.
+
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html
 [deform]: http://docs.pylonsproject.org/projects/deform/en/latest/
 [deform_bootstrap]: http://pypi.python.org/pypi/deform_bootstrap
@@ -241,3 +247,4 @@ In order to keep up appearances, we add a custom Not Found view that integrates 
 [persona]: https://login.persona.org/
 [pyramid_persona]: https://pyramid_persona.readthedocs.org/en/latest/
 [notfound]: http://docs.pylonsproject.org/projects/pyramid/en/latest/api/view.html#pyramid.view.notfound_view_config
+[sqlalchemy]: http://www.sqlalchemy.org/

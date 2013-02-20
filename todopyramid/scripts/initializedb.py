@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import sys
 import transaction
@@ -11,7 +12,7 @@ from pyramid.paster import (
 
 from ..models import (
     DBSession,
-    MyModel,
+    TodoItem,
     Base,
     )
 
@@ -33,5 +34,15 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-        model = MyModel(name='one', value=1)
-        DBSession.add(model)
+        task1 = TodoItem(
+            task='Task One',
+            tags=[' OnE ', 'two'],
+            due_date=datetime.now()
+        )
+        task2 = TodoItem(
+            task='Task Two',
+            tags=[' OnE ', ' THREe'],
+            due_date=datetime.now()
+        )
+        DBSession.add(task1)
+        DBSession.add(task2)

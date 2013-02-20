@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"
-    xmlns="http://www.w3.org/1999/xhtml"
-    xmlns:metal="http://xml.zope.org/namespaces/metal"
-    xmlns:tal="http://xml.zope.org/namespaces/tal"
-    metal:define-macro="layout">
+<html lang="en" metal:define-macro="layout">
   <head>
     <meta charset="utf-8">
     <title>ToDo Pyramid</title>
@@ -69,4 +65,3 @@
     <script src="${request.static_url('deform_bootstrap:static/jquery.maskedinput-1.3.js')}"></script>
   </body>
 </html>
-

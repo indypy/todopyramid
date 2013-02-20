@@ -1,12 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-  </head>
-
-  <body metal:use-macro="view.global_template">
-    <div metal:fill-slot="content">
-      <h1>Home</h1>
-      <p>Welcome to the Pyramid version of the ToDo app.</p>
-    </div>
-  </body>
-</html>
+<metal:master use-macro="view.global_template">
+  <div metal:fill-slot="content">
+    <p>Welcome to the Pyramid version of the ToDo app.</p>
+  </div>
+</metal:master>

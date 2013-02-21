@@ -1,6 +1,5 @@
 <metal:master use-macro="view.global_template">
   <div metal:fill-slot="content">
-  <p class="text-error">foo bar</p>
     <table class="table table-striped">
       <thead>
         <tr>

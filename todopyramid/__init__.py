@@ -26,5 +26,7 @@ def main(global_config, **settings):
     )
     config.add_route('home', '/')
     config.add_route('list', '/list')
+    config.add_route('tags', '/tags')
+    config.add_route('tag', '/tags/{tag_name}')
     config.scan()
     return config.make_wsgi_app()

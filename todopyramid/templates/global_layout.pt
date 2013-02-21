@@ -35,6 +35,7 @@
             <ul class="nav" tal:define="section_name section | None">
               <li tal:attributes="class section_name == 'home' and 'active' or ''"><a href="${request.application_url}">Home</a></li>
               <li tal:attributes="class section_name == 'list' and 'active' or ''"><a href="${request.application_url}/list">List</a></li>
+              <li tal:attributes="class section_name == 'tags' and 'active' or ''"><a href="${request.application_url}/tags">Tags</a></li>
               <li tal:attributes="class section_name == 'about' and 'active' or ''"><a href="#about">About</a></li>
             </ul>
 

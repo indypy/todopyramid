@@ -7,6 +7,7 @@ from sqlalchemy.exc import DBAPIError
 
 from .layouts import Layouts
 from .models import DBSession
+from .models import Tag
 from .models import TodoItem
 
 
@@ -52,6 +53,30 @@ class ToDoViews(Layouts):
             'page_title': 'Todo List',
             'subtext': '%s items remaining' % count,
             'section': 'list',
+            'items': todo_items,
+        }
+
+    @view_config(route_name='tags', renderer='templates/todo_tags.pt')
+    def tags_view(self):
+        tags = DBSession.query(Tag).order_by('name').all()
+        return {
+            'section': 'tags',
+            'count': len(tags),
+            'tags': tags,
+        }
+
+    @view_config(route_name='tag', renderer='templates/todo_list.pt')
+    def tag_view(self):
+        tag_name = self.request.matchdict['tag_name']
+        todo_items = DBSession.query(
+            TodoItem).order_by('due_date IS NULL').filter(
+            TodoItem.tags.any(Tag.name.in_([tag_name])))
+        count = todo_items.count()
+        item_label = 'items' if count > 1 else 'item'
+        return {
+            'page_title': 'Tag List',
+            'subtext': '%s %s matching "%s"' % (count, item_label, tag_name),
+            'section': 'tags',
             'items': todo_items,
         }
 

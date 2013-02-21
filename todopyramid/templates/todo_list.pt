@@ -14,11 +14,12 @@
         <tr tal:repeat="item items">
           <td>${item.task}</td>
           <td>
-            <span class="label label-info"
-                  tal:repeat="tag item.tags"
-                  tal:content="tag.name">
+            <a class="label label-info"
+               href="${request.application_url}/tags/${tag.name}"
+               tal:repeat="tag sorted(item.tags)"
+               tal:content="tag.name">
               Tag name
-            </span>
+            </a>
           </td>
           <td>
             <p tal:condition="item.due_date"

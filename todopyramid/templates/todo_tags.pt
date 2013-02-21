@@ -1,0 +1,15 @@
+<metal:master use-macro="view.global_template">
+  <div class="hero-unit" metal:fill-slot="content">
+    <h1>Tags <small>${count} total</small></h1>
+    <p>Choose a tag to view the ToDo items associated with it.</p>
+    <br/>
+    <p>
+      <a class="btn btn-large btn-primary"
+         href="${request.application_url}/tags/${tag.name}"
+         tal:repeat="tag tags"
+         tal:content="tag.name">
+        Tag name
+      </a>
+    </p>
+  </div>
+</metal:master>

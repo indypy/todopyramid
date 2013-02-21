@@ -23,6 +23,7 @@ This creates the new virtual environment, now you can install the app.
 (todopyramid)$ git clone https://github.com/indypy/todopyramid.git
 (todopyramid)$ cd todopyramid
 (todopyramid)$ pip install -r requirements.txt
+(todopyramid)$ python2.7 setup.py develop
 ```
 
 This gives us the end result of the finished app. It can now be started up by doing the following.

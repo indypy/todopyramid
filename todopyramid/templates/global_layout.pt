@@ -49,7 +49,7 @@
 
     <div class="container">
       <div class="page-header" tal:condition="page_title | None">
-        <h1>${page_title}<tal:subtext condition="subtext"> <small>${subtext}</small></tal:subtext></h1>
+        <h1>${page_title}<tal:subtext condition="subtext"> <small><tal:text replace="structure subtext">html content here</tal:text></small></tal:subtext></h1>
       </div>
 
       <metal:content define-slot="content">

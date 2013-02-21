@@ -6,7 +6,7 @@
           <th>Task</th>
           <th>Tags</th>
           <th>Due</th>
-          <th>Action</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -26,7 +26,19 @@
               <tal:moment replace="structure view.pretty_date(item.due_date)" />
             </span>
           </td>
-          <td></td>
+          <td>
+            <div class="btn-group">
+              <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+              Action
+              <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Edit</a></li>
+                <li><a href="#">Postpone</a></li>
+                <li><a href="#">Complete</a></li>
+              </ul>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>

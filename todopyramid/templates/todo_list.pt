@@ -1,6 +1,7 @@
 <metal:master use-macro="view.global_template">
   <div metal:fill-slot="content">
-    <table class="table table-striped">
+    <table class="table table-striped"
+           tal:define="selected_tag tag_name | None">
       <thead>
         <tr>
           <th>Task</th>
@@ -13,12 +14,9 @@
         <tr tal:repeat="item items">
           <td>${item.task}</td>
           <td>
-            <a class="label label-info"
-               href="${request.application_url}/tags/${tag.name}"
-               tal:repeat="tag sorted(item.tags)"
-               tal:content="tag.name">
-              Tag name
-            </a>
+            <a href="${request.application_url}/tags/${tag.name}"
+               tal:repeat="tag sorted(item.tags, key=lambda x: x.name)"
+               tal:attributes="class selected_tag == tag.name and 'label label-warning' or 'label label-info'">${tag.name}</a>
           </td>
           <td>
             <span tal:condition="item.due_date"

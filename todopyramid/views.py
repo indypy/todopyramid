@@ -79,6 +79,7 @@ class ToDoViews(Layouts):
             'page_title': 'Tag List',
             'subtext':  subtext % (count, item_label, tag_name),
             'section': 'tags',
+            'tag_name': tag_name,
             'items': todo_items,
         }
 

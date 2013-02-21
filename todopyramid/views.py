@@ -28,15 +28,15 @@ class ToDoViews(Layouts):
 </script>""" % fmt_date
 
     @notfound_view_config(renderer='templates/404.pt')
-    def notfound(request):
+    def notfound(self):
         return {}
 
     @forbidden_view_config(renderer='templates/signin.pt')
-    def forbidden(request):
+    def forbidden(self):
         return {}
 
     @view_config(route_name='home', renderer='templates/home.pt')
-    def home_view(request):
+    def home_view(self):
         try:
             count = DBSession.query(TodoItem).count()
         except DBAPIError:
@@ -45,10 +45,10 @@ class ToDoViews(Layouts):
         return {'count': count, 'section': 'home'}
 
     @view_config(route_name='list', renderer='templates/todo_list.pt')
-    def list_view(request):
         todo_query = DBSession.query(TodoItem)
         count = todo_query.count()
         todo_items = todo_query.order_by('due_date IS NULL').all()
+    def list_view(self):
         return {
             'page_title': 'Todo List',
             'subtext': '%s items remaining' % count,

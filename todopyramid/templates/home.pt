@@ -2,7 +2,7 @@
   <div class="hero-unit" metal:fill-slot="content">
     <h1>Welcome!</h1>
     <br/>
-    <p>It is good to have you back Clayton. You have <span class="badge badge-success">${count}</span> task<tal:plural condition="count > 1">s</tal:plural> to take care of.</p>
+    <p>It is good to have you back Clayton. You have <a href="${request.application_url}/list" class="badge badge-success">${count}</a> task<tal:plural condition="count > 1">s</tal:plural> to take care of.</p>
     <p>What are you going to get done today?</p>
   </div>
 </metal:master>

@@ -45,13 +45,14 @@ class ToDoViews(Layouts):
         return {'count': count, 'section': 'home'}
 
     @view_config(route_name='list', renderer='templates/todo_list.pt')
-        todo_query = DBSession.query(TodoItem)
-        count = todo_query.count()
-        todo_items = todo_query.order_by('due_date IS NULL').all()
     def list_view(self):
+        todo_items = DBSession.query(TodoItem).order_by(
+            'due_date IS NULL').all()
+        count = len(todo_items)
+        item_label = 'items' if count > 1 else 'item'
         return {
             'page_title': 'Todo List',
-            'subtext': '%s items remaining' % count,
+            'subtext': '%s %s remaining' % (count, item_label),
             'section': 'list',
             'items': todo_items,
         }

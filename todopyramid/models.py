@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
@@ -46,3 +48,7 @@ class TodoItem(Base):
         for tag_name in tags:
             tag = tag_name.strip().lower()
             self.tags.append(DBSession.merge(Tag(tag)))
+
+    @property
+    def past_due(self):
+        return self.due_date < datetime.utcnow()

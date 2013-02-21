@@ -16,6 +16,16 @@ class ToDoViews(Layouts):
         self.context = context
         self.request = request
 
+    def pretty_date(self, item_date):
+        """Shoehorn the moment.js code into the template. Based on this
+        blog: http://blog.miguelgrinberg.com/
+        """
+        fmt_date = item_date.strftime('%Y-%m-%dT%H:%M:%S Z')
+        return """
+<script>
+  document.write(moment("%s").calendar());
+</script>""" % fmt_date
+
     @notfound_view_config(renderer='templates/404.pt')
     def notfound(request):
         return {}
@@ -32,6 +42,18 @@ class ToDoViews(Layouts):
             return Response(
                 conn_err_msg, content_type='text/plain', status_int=500)
         return {'count': count, 'section': 'home'}
+
+    @view_config(route_name='list', renderer='templates/todo_list.pt')
+    def list_view(request):
+        todo_query = DBSession.query(TodoItem)
+        count = todo_query.count()
+        todo_items = todo_query.order_by('due_date IS NULL').all()
+        return {
+            'page_title': 'Todo List',
+            'subtext': '%s items remaining' % count,
+            'section': 'list',
+            'items': todo_items,
+        }
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem

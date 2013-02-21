@@ -25,5 +25,6 @@ def main(global_config, **settings):
         cache_max_age=3600
     )
     config.add_route('home', '/')
+    config.add_route('list', '/list')
     config.scan()
     return config.make_wsgi_app()

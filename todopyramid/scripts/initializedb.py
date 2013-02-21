@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 import os
 import sys
 import transaction
@@ -35,14 +36,26 @@ def main(argv=sys.argv):
     Base.metadata.create_all(engine)
     with transaction.manager:
         task1 = TodoItem(
-            task='Task One',
+            task='A joke about pythons',
             tags=[' OnE ', 'two'],
-            due_date=datetime.now()
+            due_date=datetime.utcnow() - timedelta(days=1),
         )
         task2 = TodoItem(
-            task='Task Two',
+            task='The special times',
             tags=[' OnE ', ' THREe'],
-            due_date=datetime.now()
+            due_date=datetime.utcnow() + timedelta(hours=5),
+        )
+        task3 = TodoItem(
+            task='No end date',
+            tags=['spam', 'eggs', 'ham'],
+            due_date=None,
+        )
+        task4 = TodoItem(
+            task='Doin stuff',
+            tags=[],
+            due_date=datetime.utcnow() + timedelta(days=60),
         )
         DBSession.add(task1)
         DBSession.add(task2)
+        DBSession.add(task3)
+        DBSession.add(task4)

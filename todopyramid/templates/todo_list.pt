@@ -1,0 +1,37 @@
+<metal:master use-macro="view.global_template">
+  <div metal:fill-slot="content">
+  <p class="text-error">foo bar</p>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Tags</th>
+          <th>Due</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr tal:repeat="item items">
+          <td>${item.task}</td>
+          <td>
+            <span class="label label-info"
+                  tal:repeat="tag item.tags"
+                  tal:content="tag.name">
+              Tag name
+            </span>
+          </td>
+          <td>
+            <p tal:condition="item.due_date"
+               tal:attributes="class item.past_due and 'badge badge-important' or 'badge'">
+              <tal:moment replace="structure view.pretty_date(item.due_date)" />
+            </p>
+          </td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <metal:js fill-slot="css">
+    <script src="${request.static_url('todopyramid:static/moment.min.js')}"></script>
+  </metal:js>
+</metal:master>

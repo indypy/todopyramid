@@ -74,9 +74,10 @@ class ToDoViews(Layouts):
             TodoItem.tags.any(Tag.name.in_([tag_name])))
         count = todo_items.count()
         item_label = 'items' if count > 1 else 'item'
+        subtext = '%s %s matching <span class="label label-warning">%s</span>'
         return {
             'page_title': 'Tag List',
-            'subtext': '%s %s matching "%s"' % (count, item_label, tag_name),
+            'subtext':  subtext % (count, item_label, tag_name),
             'section': 'tags',
             'items': todo_items,
         }

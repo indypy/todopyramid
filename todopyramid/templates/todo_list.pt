@@ -15,7 +15,7 @@
           <td>${item.task}</td>
           <td>
             <a href="${request.application_url}/tags/${tag.name}"
-               tal:repeat="tag sorted(item.tags, key=lambda x: x.name)"
+               tal:repeat="tag item.sorted_tags"
                tal:attributes="class selected_tag == tag.name and 'label label-warning' or 'label label-info'">${tag.name}</a>
           </td>
           <td>

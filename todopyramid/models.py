@@ -50,5 +50,9 @@ class TodoItem(Base):
             self.tags.append(DBSession.merge(Tag(tag)))
 
     @property
+    def sorted_tags(self):
+        return sorted(self.tags, key=lambda x: x.name)
+
+    @property
     def past_due(self):
         return self.due_date < datetime.utcnow()

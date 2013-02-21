@@ -21,10 +21,10 @@
             </a>
           </td>
           <td>
-            <p tal:condition="item.due_date"
+            <span tal:condition="item.due_date"
                tal:attributes="class item.past_due and 'badge badge-important' or 'badge'">
               <tal:moment replace="structure view.pretty_date(item.due_date)" />
-            </p>
+            </span>
           </td>
           <td></td>
         </tr>

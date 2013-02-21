@@ -31,6 +31,7 @@
       </tbody>
     </table>
   </div>
+  <!--! Ironically filling the CSS slot here so that the code above for the moment junk works -->
   <metal:js fill-slot="css">
     <script src="${request.static_url('todopyramid:static/moment.min.js')}"></script>
   </metal:js>

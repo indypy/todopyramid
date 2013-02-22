@@ -47,14 +47,15 @@ class TodoItem(Base):
     id = Column(Integer, primary_key=True)
     task = Column(Text, nullable=False)
     due_date = Column(DateTime)
-    tags = relationship(Tag, secondary=todoitemtag_table)
     user = Column(Integer, ForeignKey('users.email'), nullable=False)
+    tags = relationship(Tag, secondary=todoitemtag_table, lazy='dynamic')
 
     def __init__(self, user, task, tags=None, due_date=None):
         self.user = user
         self.task = task
         self.due_date = due_date
-        self.apply_tags(tags)
+        if tags is not None:
+            self.apply_tags(tags)
 
     def apply_tags(self, tags):
         for tag_name in tags:
@@ -81,3 +82,15 @@ class TodoUser(Base):
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
+
+    @property
+    def user_tags(self):
+        """Find all tags a user has created
+
+        XXX: This should be done via a query directly
+        """
+        tags = set()
+        todo_list = self.todo_list.all()
+        for todo in todo_list:
+            tags.update(todo.tags.all())
+        return tags

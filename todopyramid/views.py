@@ -94,7 +94,7 @@ class ToDoViews(Layouts):
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')
     def list_view(self):
-        todo_items = DBSession.query(TodoItem).order_by(
+        todo_items = self.user.todo_list.order_by(
             'due_date IS NULL').all()
         count = len(todo_items)
         item_label = 'items' if count > 1 else 'item'
@@ -108,7 +108,7 @@ class ToDoViews(Layouts):
     @view_config(route_name='tags', renderer='templates/todo_tags.pt',
                 permission='view')
     def tags_view(self):
-        tags = DBSession.query(Tag).order_by('name').all()
+        tags = self.user.user_tags
         return {
             'section': 'tags',
             'count': len(tags),
@@ -119,8 +119,7 @@ class ToDoViews(Layouts):
                  permission='view')
     def tag_view(self):
         tag_name = self.request.matchdict['tag_name']
-        todo_items = DBSession.query(
-            TodoItem).order_by('due_date IS NULL').filter(
+        todo_items = self.user.todo_list.order_by('due_date IS NULL').filter(
             TodoItem.tags.any(Tag.name.in_([tag_name])))
         count = todo_items.count()
         item_label = 'items' if count > 1 else 'item'

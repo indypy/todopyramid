@@ -57,7 +57,7 @@ Since we are responsible developers, the first thing we should do is put this co
 ```
 (todopyramid)$ cd todopyramid
 (todopyramid)$ git init
-(todopyramid)$ git status | awk -F'#\t' '{print $2}' | xargs git add
+(todopyramid)$ git add .
 (todopyramid)$ git commit -m 'initial package from pcreate alchemy scaffold'
 ```
 

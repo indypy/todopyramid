@@ -5,9 +5,9 @@
     <br/>
     <p>
       <a class="btn btn-large btn-primary"
-         href="${request.application_url}/tags/${tag.name}"
+         href="${request.application_url}/tags/${tag.tag_id}"
          tal:repeat="tag tags"
-         tal:content="tag.name">
+         tal:content="tag.tag_id">
         Tag name
       </a>
     </p>

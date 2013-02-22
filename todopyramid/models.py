@@ -86,14 +86,12 @@ class TodoUser(Base):
     @property
     def user_tags(self):
         """Find all tags a user has created
-
-        XXX: This should be done via a query directly
         """
-        tags = set()
-        todo_list = self.todo_list.all()
-        for todo in todo_list:
-            tags.update(todo.tags.all())
-        return tags
+        qry = self.todo_list.session.query(todoitemtag_table.columns['tag_id'])
+        qry = qry.join(TodoItem).filter_by(user=self.email)
+        qry = qry.group_by('tag_id')
+        qry = qry.order_by('tag_id')
+        return qry.all()
 
     @property
     def profile_complete(self):

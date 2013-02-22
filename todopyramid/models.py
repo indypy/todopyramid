@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from pyramid.security import Allow
+from pyramid.security import Authenticated
+
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
@@ -21,6 +24,13 @@ todoitemtag_table = Table(
     Column('tag_id', Integer, ForeignKey('tags.name')),
     Column('todo_id', Integer, ForeignKey('todoitems.id')),
 )
+
+
+class RootFactory(object):
+    __acl__ = [(Allow, Authenticated, 'view')]
+
+    def __init__(self, request):
+        pass
 
 
 class Tag(Base):

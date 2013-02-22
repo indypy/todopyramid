@@ -79,7 +79,8 @@ class ToDoViews(Layouts):
                 conn_err_msg, content_type='text/plain', status_int=500)
         return {'count': count, 'section': 'home'}
 
-    @view_config(route_name='list', renderer='templates/todo_list.pt')
+    @view_config(route_name='list', renderer='templates/todo_list.pt',
+                permission='view')
     def list_view(self):
         todo_items = DBSession.query(TodoItem).order_by(
             'due_date IS NULL').all()
@@ -92,7 +93,8 @@ class ToDoViews(Layouts):
             'items': todo_items,
         }
 
-    @view_config(route_name='tags', renderer='templates/todo_tags.pt')
+    @view_config(route_name='tags', renderer='templates/todo_tags.pt',
+                permission='view')
     def tags_view(self):
         tags = DBSession.query(Tag).order_by('name').all()
         return {
@@ -101,7 +103,8 @@ class ToDoViews(Layouts):
             'tags': tags,
         }
 
-    @view_config(route_name='tag', renderer='templates/todo_list.pt')
+    @view_config(route_name='tag', renderer='templates/todo_list.pt',
+                 permission='view')
     def tag_view(self):
         tag_name = self.request.matchdict['tag_name']
         todo_items = DBSession.query(

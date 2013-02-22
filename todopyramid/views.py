@@ -1,14 +1,20 @@
+from pyramid.httpexceptions import HTTPFound
 from pyramid.response import Response
+from pyramid.security import remember
+from pyramid.security import forget
 from pyramid.view import forbidden_view_config
 from pyramid.view import notfound_view_config
 from pyramid.view import view_config
 
+from pyramid_persona.views import verify_login
 from sqlalchemy.exc import DBAPIError
+import transaction
 
 from .layouts import Layouts
 from .models import DBSession
 from .models import Tag
 from .models import TodoItem
+from .models import TodoUser
 
 
 class ToDoViews(Layouts):
@@ -33,6 +39,35 @@ class ToDoViews(Layouts):
 
     @forbidden_view_config(renderer='templates/signin.pt')
     def forbidden(self):
+        return {}
+
+    @view_config(route_name='logout', check_csrf=True)
+    def logout(self):
+        headers = forget(self.request)
+        # Send the user back home, everything else is protected
+        return HTTPFound('/', headers=headers)
+
+    @view_config(route_name='login', check_csrf=True)
+    def login_view(self):
+        email = verify_login(self.request)
+        headers = remember(self.request, email)
+        # Check to see if the user exists
+        if not DBSession.query(TodoUser).filter(TodoUser.email == email).all():
+            # Create the skeleton user
+            with transaction.manager:
+                DBSession.add(TodoUser(email))
+            msg = (
+                "This is your first visit, we hope your stay proves to be "
+                "prosperous. Before you begin, please update your profile."
+            )
+            self.request.session.flash(msg)
+            return HTTPFound('/account', headers=headers)
+        self.request.session.flash('Logged in successfully')
+        return HTTPFound(self.request.POST['came_from'], headers=headers)
+
+    @view_config(route_name='account', renderer='templates/account.pt',
+                permission='view')
+    def account_view(self):
         return {}
 
     @view_config(route_name='home', renderer='templates/home.pt')

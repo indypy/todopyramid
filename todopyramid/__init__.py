@@ -25,6 +25,8 @@ def main(global_config, **settings):
         cache_max_age=3600
     )
     config.add_route('home', '/')
+    # Users
+    config.add_route('account', '/account')
     config.add_route('list', '/list')
     config.add_route('tags', '/tags')
     config.add_route('tag', '/tags/{tag_name}')

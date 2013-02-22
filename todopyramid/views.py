@@ -24,19 +24,6 @@ from .models import TodoUser
 from .schema import SettingsSchema
 
 
-def _form_resources(form):
-    resources = form.get_widget_resources()
-    js_resources = resources['js']
-    css_resources = resources['css']
-    js_links = ['/deform_static/%s' % r for r in js_resources]
-    css_links = ['/deform_static/%s' % r for r in css_resources]
-    jtag = '<script type="text/javascript" src="%s"></script>'
-    ltag = '<link rel="stylesheet" media="screen" type="text/css" href="%s"/>'
-    js_tags = [jtag % link for link in js_links]
-    css_tags = [ltag % link for link in css_links]
-    return (css_tags, js_tags)
-
-
 class ToDoViews(Layouts):
 
     def __init__(self, context, request):
@@ -54,6 +41,14 @@ class ToDoViews(Layouts):
                 # know they need to run the script
                 return Response(
                     conn_err_msg, content_type='text/plain', status_int=500)
+
+    def form_resources(self, form):
+        resources = form.get_widget_resources()
+        js_resources = resources['js']
+        css_resources = resources['css']
+        js_links = ['deform:static/%s' % r for r in js_resources]
+        css_links = ['deform:static/%s' % r for r in css_resources]
+        return (css_links, js_links)
 
     def pretty_date(self, item_date):
         """Shoehorn the moment.js code into the template. Based on this
@@ -116,7 +111,7 @@ class ToDoViews(Layouts):
         section_name = 'account'
         schema = SettingsSchema()
         form = Form(schema, buttons=('submit',))
-        css_resources, js_resources = _form_resources(form)
+        css_resources, js_resources = self.form_resources(form)
         if 'submit' in self.request.POST:
             controls = self.request.POST.items()
             try:

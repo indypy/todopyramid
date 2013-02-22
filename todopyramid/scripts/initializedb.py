@@ -26,6 +26,39 @@ def usage(argv):
     sys.exit(1)
 
 
+def create_dummy_content(user_id):
+    """Create some tasks by default to show off the site
+    """
+    task = TodoItem(
+        user=user_id,
+        task=u'A joke about pythons',
+        tags=[u' OnE ', u'two'],
+        due_date=datetime.utcnow() - timedelta(days=1),
+    )
+    DBSession.add(task)
+    task = TodoItem(
+        user=user_id,
+        task=u'The special times',
+        tags=[u' OnE ', u' THREe'],
+        due_date=datetime.utcnow() + timedelta(hours=5),
+    )
+    DBSession.add(task)
+    task = TodoItem(
+        user=user_id,
+        task=u'No end date',
+        tags=[u'spam', u'eggs', u'ham'],
+        due_date=None,
+    )
+    DBSession.add(task)
+    task = TodoItem(
+        user=user_id,
+        task=u'Doin stuff',
+        tags=[],
+        due_date=datetime.utcnow() + timedelta(days=60),
+    )
+    DBSession.add(task)
+
+
 def main(argv=sys.argv):
     if len(argv) != 2:
         usage(argv)
@@ -36,57 +69,10 @@ def main(argv=sys.argv):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     with transaction.manager:
-        user1 = TodoUser(
-            email='me@claytron.com',
-            first_name='Clayton',
-            last_name='Parker',
+        user = TodoUser(
+            email=u'king.arthur@example.com',
+            first_name=u'Arthur',
+            last_name=u'Pendragon',
         )
-        DBSession.add(user1)
-        user2 = TodoUser(
-            email='king.arthur@example.com',
-            first_name='Arthur',
-            last_name='Pendragon',
-        )
-        DBSession.add(user2)
-        task1 = TodoItem(
-            task='A joke about pythons',
-            tags=[' OnE ', 'two'],
-            due_date=datetime.utcnow() - timedelta(days=1),
-            user='me@claytron.com',
-        )
-        task2 = TodoItem(
-            user='me@claytron.com',
-            task='The special times',
-            tags=[' OnE ', ' THREe'],
-            due_date=datetime.utcnow() + timedelta(hours=5),
-        )
-        task3 = TodoItem(
-            user='me@claytron.com',
-            task='No end date for claytron',
-            tags=['spam', 'eggs', 'ham', 'claytron'],
-            due_date=None,
-        )
-        task4 = TodoItem(
-            user='me@claytron.com',
-            task='Doin stuff',
-            tags=[],
-            due_date=datetime.utcnow() + timedelta(days=60),
-        )
-        task5 = TodoItem(
-            user='king.arthur@example.com',
-            task='No end date for arthur',
-            tags=['spam', 'eggs', 'ham', 'arthur'],
-            due_date=None,
-        )
-        task6 = TodoItem(
-            user='king.arthur@example.com',
-            task='Doin stuff for arthur',
-            tags=[],
-            due_date=datetime.utcnow() + timedelta(days=60),
-        )
-        DBSession.add(task1)
-        DBSession.add(task2)
-        DBSession.add(task3)
-        DBSession.add(task4)
-        DBSession.add(task5)
-        DBSession.add(task6)
+        DBSession.add(user)
+        create_dummy_content(u'king.arthur@example.com')

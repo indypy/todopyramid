@@ -8,6 +8,9 @@ from pyramid.view import forbidden_view_config
 from pyramid.view import notfound_view_config
 from pyramid.view import view_config
 
+from deform import Form
+from deform import ValidationFailure
+from peppercorn import parse
 from pyramid_persona.views import verify_login
 from sqlalchemy.exc import DBAPIError
 import transaction
@@ -18,6 +21,20 @@ from .models import DBSession
 from .models import Tag
 from .models import TodoItem
 from .models import TodoUser
+from .schema import SettingsSchema
+
+
+def _form_resources(form):
+    resources = form.get_widget_resources()
+    js_resources = resources['js']
+    css_resources = resources['css']
+    js_links = ['/deform_static/%s' % r for r in js_resources]
+    css_links = ['/deform_static/%s' % r for r in css_resources]
+    jtag = '<script type="text/javascript" src="%s"></script>'
+    ltag = '<link rel="stylesheet" media="screen" type="text/css" href="%s"/>'
+    js_tags = [jtag % link for link in js_links]
+    css_tags = [ltag % link for link in css_links]
+    return (css_tags, js_tags)
 
 
 class ToDoViews(Layouts):
@@ -96,7 +113,48 @@ class ToDoViews(Layouts):
     @view_config(route_name='account', renderer='templates/account.pt',
                 permission='view')
     def account_view(self):
-        return {}
+        section_name = 'account'
+        schema = SettingsSchema()
+        form = Form(schema, buttons=('submit',))
+        css_resources, js_resources = _form_resources(form)
+        if 'submit' in self.request.POST:
+            controls = self.request.POST.items()
+            try:
+                form.validate(controls)
+            except (ValidationFailure,), e:
+                msg = 'There was an error saving your settings.'
+                self.request.session.flash(msg, queue='error')
+                return {
+                    'form': e.render(),
+                    'css_resources': css_resources,
+                    'js_resources': js_resources,
+                    'section': section_name,
+                }
+            values = parse(self.request.params.items())
+            # Update the user
+            with transaction.manager:
+                self.user.first_name = values.get('first_name', u'')
+                self.user.last_name = values.get('last_name', u'')
+                DBSession.add(self.user)
+            self.request.session.flash(
+                'Settings updated successfully',
+                queue='success',
+            )
+            return HTTPFound('/list')
+        # Get existing values
+        if self.user is not None:
+            appstruct = dict(
+                first_name=self.user.first_name,
+                last_name=self.user.last_name,
+            )
+        else:
+            appstruct = {}
+        return {
+            'form': form.render(appstruct),
+            'css_resources': css_resources,
+            'js_resources': js_resources,
+            'section': section_name,
+        }
 
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(self):

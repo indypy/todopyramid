@@ -94,3 +94,7 @@ class TodoUser(Base):
         for todo in todo_list:
             tags.update(todo.tags.all())
         return tags
+
+    @property
+    def profile_complete(self):
+        return self.first_name and self.last_name

@@ -3,6 +3,7 @@ from pyramid.response import Response
 from pyramid.security import authenticated_userid
 from pyramid.security import remember
 from pyramid.security import forget
+from pyramid.settings import asbool
 from pyramid.view import forbidden_view_config
 from pyramid.view import notfound_view_config
 from pyramid.view import view_config
@@ -11,6 +12,7 @@ from pyramid_persona.views import verify_login
 from sqlalchemy.exc import DBAPIError
 import transaction
 
+from .scripts.initializedb import create_dummy_content
 from .layouts import Layouts
 from .models import DBSession
 from .models import Tag
@@ -65,18 +67,31 @@ class ToDoViews(Layouts):
         email = verify_login(self.request)
         headers = remember(self.request, email)
         # Check to see if the user exists
-        if not DBSession.query(TodoUser).filter(TodoUser.email == email).all():
-            # Create the skeleton user
-            with transaction.manager:
-                DBSession.add(TodoUser(email))
-            msg = (
-                "This is your first visit, we hope your stay proves to be "
-                "prosperous. Before you begin, please update your profile."
-            )
-            self.request.session.flash(msg)
+        user = DBSession.query(TodoUser).filter(
+            TodoUser.email == email).first()
+        if user and user.profile_complete:
+            self.request.session.flash('Logged in successfully')
+            return HTTPFound(self.request.POST['came_from'], headers=headers)
+        elif user and not user.profile_complete:
+            msg = "Before you begin, please update your profile."
+            self.request.session.flash(msg, queue='info')
             return HTTPFound('/account', headers=headers)
-        self.request.session.flash('Logged in successfully')
-        return HTTPFound(self.request.POST['came_from'], headers=headers)
+        # Otherwise, create an account and optionally create some content
+        settings = self.request.registry.settings
+        generate_content = asbool(
+            settings.get('todopyramid.generate_content', None)
+        )
+        # Create the skeleton user
+        with transaction.manager:
+            DBSession.add(TodoUser(email))
+            if generate_content:
+                create_dummy_content(email)
+        msg = (
+            "This is your first visit, we hope your stay proves to be "
+            "prosperous. Before you begin, please update your profile."
+        )
+        self.request.session.flash(msg)
+        return HTTPFound('/account', headers=headers)
 
     @view_config(route_name='account', renderer='templates/account.pt',
                 permission='view')

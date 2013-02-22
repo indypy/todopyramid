@@ -85,12 +85,11 @@ class ToDoViews(Layouts):
 
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(self):
-        try:
-            count = DBSession.query(TodoItem).count()
-        except DBAPIError:
-            return Response(
-                conn_err_msg, content_type='text/plain', status_int=500)
-        return {'count': count, 'section': 'home'}
+        if self.user_id is None:
+            count = None
+        else:
+            count = len(self.user.todo_list.all())
+        return {'user': self.user, 'count': count, 'section': 'home'}
 
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')

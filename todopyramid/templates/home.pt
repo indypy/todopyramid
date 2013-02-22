@@ -1,8 +1,31 @@
 <metal:master use-macro="view.global_template">
-  <div class="hero-unit" metal:fill-slot="content">
+  <div class="hero-unit"
+       metal:fill-slot="content"
+       tal:define="anon count is None;
+                   done count is not None and count == 0">
+
     <h1>Welcome!</h1>
     <br/>
-    <p>It is good to have you back Clayton. You have <a href="${request.application_url}/list" class="badge badge-success">${count}</a> task<tal:plural condition="count > 1">s</tal:plural> to take care of.</p>
-    <p>What are you going to get done today?</p>
+
+    <tal:anon condition="anon">
+      <p>Some text about why you would sign up for this todo list</p>
+    </tal:anon>
+
+    <tal:logged_in condition="not anon">
+      <p>
+        It is good to have you back<tal:greeting condition="user.first_name"> ${user.first_name}</tal:greeting>.
+        <tal:workit condition="not done">
+          You have <a href="${request.application_url}/list" class="badge badge-success">${count}</a> task<tal:plural condition="count > 1">s</tal:plural> to take care of.
+         <p>What are you going to get done today?</p>
+        </tal:workit>
+
+        <tal:done condition="done">
+          Well done, you have <a href="${request.application_url}/list" class="badge badge-success">${count}</a> tasks left to complete.
+
+          <p>What's next?</p>
+        </tal:done>
+      </p>
+    </tal:logged_in>
+
   </div>
 </metal:master>

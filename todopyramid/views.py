@@ -1,5 +1,6 @@
 from pyramid.httpexceptions import HTTPFound
 from pyramid.response import Response
+from pyramid.security import authenticated_userid
 from pyramid.security import remember
 from pyramid.security import forget
 from pyramid.view import forbidden_view_config
@@ -22,6 +23,18 @@ class ToDoViews(Layouts):
     def __init__(self, context, request):
         self.context = context
         self.request = request
+        self.user_id = authenticated_userid(request)
+        self.todo_list = []
+        self.user = None
+        if self.user_id is not None:
+            try:
+                self.user = DBSession.query(TodoUser).filter(
+                    TodoUser.email == self.user_id).first()
+            except DBAPIError:
+                # We'll add this DB error exception here to let people
+                # know they need to run the script
+                return Response(
+                    conn_err_msg, content_type='text/plain', status_int=500)
 
     def pretty_date(self, item_date):
         """Shoehorn the moment.js code into the template. Based on this

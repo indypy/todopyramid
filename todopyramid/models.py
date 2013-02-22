@@ -48,8 +48,10 @@ class TodoItem(Base):
     task = Column(Text, nullable=False)
     due_date = Column(DateTime)
     tags = relationship(Tag, secondary=todoitemtag_table)
+    user = Column(Integer, ForeignKey('users.email'), nullable=False)
 
-    def __init__(self, task, tags, due_date):
+    def __init__(self, user, task, tags=None, due_date=None):
+        self.user = user
         self.task = task
         self.due_date = due_date
         self.apply_tags(tags)
@@ -66,3 +68,16 @@ class TodoItem(Base):
     @property
     def past_due(self):
         return self.due_date < datetime.utcnow()
+
+
+class TodoUser(Base):
+    __tablename__ = 'users'
+    email = Column(Text, primary_key=True)
+    first_name = Column(Text)
+    last_name = Column(Text)
+    todo_list = relationship(TodoItem, lazy='dynamic')
+
+    def __init__(self, email, first_name=None, last_name=None):
+        self.email = email
+        self.first_name = first_name
+        self.last_name = last_name

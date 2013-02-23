@@ -26,7 +26,6 @@ from .models import TodoUser
 from .schema import SettingsSchema
 
 
-
 class TodoGrid(ObjectGrid):
     def __init__(self, request, selected_tag, *args, **kwargs):
         self.request = request
@@ -41,17 +40,18 @@ class TodoGrid(ObjectGrid):
 
     def generate_header_link(self, column_number, column, label_text):
         """This handles generation of link and then decides to call
-        self.default_header_ordered_column_format or self.default_header_column_format
+        self.default_header_ordered_column_format or
+        self.default_header_column_format
         based on whether current column is the one that is used for sorting.
 
         You need to extend Grid class and overload this method implementing
-        ordering here, whole operation consists of setting self.order_column and
-        self.order_dir to their CURRENT values, and generating new urls for state
-        that header should set set after its clicked
+        ordering here, whole operation consists of setting self.order_column
+        and self.order_dir to their CURRENT values, and generating new urls for
+        state that header should set set after its clicked
 
         (additional kw are passed to url gen. - like for webhelpers.paginate)
         """
-        GET = dict(self.request.copy().GET) # needs dict() for py2.5 compat
+        GET = dict(self.request.copy().GET)  # needs dict() for py2.5 compat
         self.order_column = GET.pop("order_col", None)
         self.order_dir = GET.pop("order_dir", None)
         # determine new order

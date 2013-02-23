@@ -197,7 +197,7 @@ class ToDoViews(Layouts):
             controls = self.request.POST.items()
             try:
                 form.validate(controls)
-            except (ValidationFailure,), e:
+            except ValidationFailure as e:
                 msg = 'There was an error saving your settings.'
                 self.request.session.flash(msg, queue='error')
                 return {

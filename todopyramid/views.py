@@ -55,10 +55,10 @@ class TodoGrid(ObjectGrid):
         self.order_column = GET.pop("order_col", None)
         self.order_dir = GET.pop("order_dir", None)
         # determine new order
-        if column == self.order_column and self.order_dir == "asc":
-            new_order_dir = "desc"
-        else:
+        if column == self.order_column and self.order_dir == "desc":
             new_order_dir = "asc"
+        else:
+            new_order_dir = "desc"
         self.additional_kw['order_col'] = column
         self.additional_kw['order_dir'] = new_order_dir
         # generate new url for example url_generator uses
@@ -254,13 +254,20 @@ class ToDoViews(Layouts):
             count = len(self.user.todo_list.all())
         return {'user': self.user, 'count': count, 'section': 'home'}
 
+    def sort_order(self):
+        order = self.request.GET.get('order_col', 'due_date')
+        order_dir = self.request.GET.get('order_dir', 'asc')
+        if order == 'due_date':
+            # handle sorting of NULL values so they are always at the end
+            order = 'CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date'
+        if order_dir:
+            order = ' '.join([order, order_dir])
+        return order
+
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')
     def list_view(self):
-        order = self.request.GET.get('order_col', 'due_date IS NULL')
-        order_dir = self.request.GET.get('order_dir', '')
-        if order_dir:
-            order = ' '.join([order, order_dir])
+        order = self.sort_order()
         todo_items = self.user.todo_list.order_by(order).all()
         grid = TodoGrid(
             self.request,
@@ -292,12 +299,9 @@ class ToDoViews(Layouts):
     @view_config(route_name='tag', renderer='templates/todo_list.pt',
                  permission='view')
     def tag_view(self):
-        tag_name = self.request.matchdict['tag_name']
-        order = self.request.GET.get('order_col', 'due_date IS NULL')
-        order_dir = self.request.GET.get('order_dir', '')
-        if order_dir:
-            order = ' '.join([order, order_dir])
+        order = self.sort_order()
         qry = self.user.todo_list.order_by(order)
+        tag_name = self.request.matchdict['tag_name']
         tag_filter = TodoItem.tags.any(Tag.name.in_([tag_name]))
         todo_items = qry.filter(tag_filter)
         count = todo_items.count()

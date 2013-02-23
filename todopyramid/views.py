@@ -315,9 +315,12 @@ class ToDoViews(Layouts):
             'grid': grid,
         }
 
+
 def pretty_date(item_date):
     """Shoehorn the moment.js code into the template. Based on this
     blog: http://blog.miguelgrinberg.com/
+
+    XXX: remove this and do it via jQuery
     """
     fmt_date = item_date.strftime('%Y-%m-%dT%H:%M:%S Z')
     return """

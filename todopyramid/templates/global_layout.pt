@@ -25,14 +25,16 @@
 
   </head>
 
-  <body>
+  <body tal:define="section_name section | None;
+                    section_class string:section-$section_name;"
+        tal:attributes="class section_name and section_class or ''">
 
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
           <a class="brand" href="${request.application_url}">ToDo Pyramid</a>
           <div class="nav-collapse collapse">
-            <ul class="nav" tal:define="section_name section | None">
+            <ul class="nav" >
               <li tal:attributes="class section_name == 'home' and 'active' or ''"><a href="${request.application_url}">Home</a></li>
               <li tal:attributes="class section_name == 'list' and 'active' or ''"><a href="${request.application_url}/list">List</a></li>
               <li tal:attributes="class section_name == 'tags' and 'active' or ''"><a href="${request.application_url}/tags">Tags</a></li>
@@ -40,7 +42,8 @@
               <li tal:attributes="class section_name == 'about' and 'active' or ''"><a href="${request.application_url}/about">About</a></li>
             </ul>
 
-            <ul class="nav pull-right">
+            <ul class="nav pull-right"
+                tal:condition="section_name != 'login'">
               <li><a href="#login">${request.persona_button}</a></li>
             </ul>
           </div><!--/.nav-collapse -->

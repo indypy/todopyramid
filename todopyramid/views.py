@@ -143,7 +143,7 @@ class ToDoViews(Layouts):
 
     @forbidden_view_config(renderer='templates/signin.pt')
     def forbidden(self):
-        return {}
+        return {'section': 'login'}
 
     @view_config(route_name='about', renderer='templates/about.pt')
     def about_view(self):

@@ -74,7 +74,7 @@ class TodoGrid(ObjectGrid):
         tag_links = []
 
         for tag in item.sorted_tags:
-            tag_url = self.url_generator('tag', tag.name)
+            tag_url = '%s/tags/%s' % (self.request.application_url, tag.name)
             tag_class = 'label'
             if self.selected_tag and tag.name == self.selected_tag:
                 tag_class += ' label-warning'

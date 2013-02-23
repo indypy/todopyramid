@@ -31,30 +31,37 @@ def create_dummy_content(user_id):
     """
     task = TodoItem(
         user=user_id,
-        task=u'A joke about pythons',
-        tags=[u' OnE ', u'two'],
+        task=u'Find a shrubbery',
+        tags=[u'quest', u'ni', u'knight'],
+        due_date=datetime.utcnow() + timedelta(days=1),
+    )
+    DBSession.add(task)
+    task = TodoItem(
+        user=user_id,
+        task=u'Search for the holy grail',
+        tags=[u'quest'],
         due_date=datetime.utcnow() - timedelta(days=1),
     )
     DBSession.add(task)
     task = TodoItem(
         user=user_id,
-        task=u'The special times',
-        tags=[u' OnE ', u' THREe'],
-        due_date=datetime.utcnow() + timedelta(hours=5),
+        task=u'Recruit Knights of the Round Table',
+        tags=[u'quest', u'knight'],
+        due_date=datetime.utcnow() + timedelta(minutes=45),
     )
     DBSession.add(task)
     task = TodoItem(
         user=user_id,
-        task=u'No end date',
-        tags=[u'spam', u'eggs', u'ham'],
-        due_date=None,
-    )
-    DBSession.add(task)
-    task = TodoItem(
-        user=user_id,
-        task=u'Doin stuff',
-        tags=[],
+        task=u'Build a Trojan Rabbit',
+        tags=[u'quest', u'rabbit'],
         due_date=datetime.utcnow() + timedelta(days=60),
+    )
+    DBSession.add(task)
+    task = TodoItem(
+        user=user_id,
+        task=u'Defeat the Rabbit of Caerbannog',
+        tags=[u'quest', u'rabbit'],
+        due_date=None,
     )
     DBSession.add(task)
 

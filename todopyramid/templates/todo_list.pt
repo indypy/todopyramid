@@ -1,11 +1,19 @@
 <metal:master use-macro="view.global_template">
   <div metal:fill-slot="content">
+
     <table class="table table-striped">
         <span tal:condition="items" tal:replace="structure grid"></span>
     </table>
+
   </div>
   <!--! Ironically filling the CSS slot here so that the code above for the moment junk works -->
-  <metal:js fill-slot="css">
+  <metal:css fill-slot="css">
     <script src="${request.static_url('todopyramid:static/moment.min.js')}"></script>
+  </metal:css>
+
+  <metal:js fill-slot="javascript">
+    <script src="${request.static_url('todopyramid:static/bootbox.min.js')}"></script>
+    <script src="${request.static_url('todopyramid:static/todo_list.js')}"></script>
   </metal:js>
+
 </metal:master>

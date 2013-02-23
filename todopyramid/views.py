@@ -103,13 +103,12 @@ class TodoGrid(ObjectGrid):
           Action
           <span class="caret"></span>
           </a>
-          <ul class="dropdown-menu">
-            <li><a href="#">Edit</a></li>
-            <li><a href="#">Postpone</a></li>
-            <li><a href="#">Complete</a></li>
+          <ul class="dropdown-menu" id="%s">
+            <li><a class="todo-edit" href="#">Edit</a></li>
+            <li><a class="todo-complete" href="#">Complete</a></li>
           </ul>
         </div>
-        """))
+        """ % item.id))
 
 
 class ToDoViews(Layouts):
@@ -228,6 +227,20 @@ class ToDoViews(Layouts):
             'js_resources': js_resources,
             'section': section_name,
         }
+
+    @view_config(renderer='json', name='delete.task', permission='view')
+    def delete_task(self):
+        """Delete a todo list item
+
+        TODO: Add a guard here so that you can only delete your tasks
+        """
+        todo_id = self.request.params.get('id', None)
+        if todo_id is not None:
+            todo_item = DBSession.query(TodoItem).filter(
+                TodoItem.id == todo_id)
+            with transaction.manager:
+                todo_item.delete()
+        return True
 
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(self):

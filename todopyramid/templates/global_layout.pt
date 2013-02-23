@@ -93,6 +93,7 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <!-- jQuery -->
     <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
+    <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
     <script src="${request.static_url('deform_bootstrap:static/jquery-ui-1.8.18.custom.min.js')}"></script>
     <script src="${request.static_url('deform_bootstrap:static/jquery-ui-timepicker-addon-0.9.9.js')}"></script>
     <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>

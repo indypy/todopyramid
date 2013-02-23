@@ -257,8 +257,6 @@ class ToDoViews(Layouts):
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')
     def list_view(self):
-        #todo_items = self.user.todo_list.order_by(
-        #    'due_date IS NULL').all()
         order = self.request.GET.get('order_col', 'due_date IS NULL')
         order_dir = self.request.GET.get('order_dir', '')
         if order_dir:

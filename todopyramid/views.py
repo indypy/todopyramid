@@ -269,7 +269,7 @@ class ToDoViews(Layouts):
             ['task', 'tags', 'due_date', '']
         )
         count = len(todo_items)
-        item_label = 'items' if count > 1 else 'item'
+        item_label = 'items' if count > 1 or count == 0 else 'item'
         return {
             'page_title': 'Todo List',
             'subtext': '<span class="count">%s</span> %s remaining' % (
@@ -301,11 +301,11 @@ class ToDoViews(Layouts):
         tag_filter = TodoItem.tags.any(Tag.name.in_([tag_name]))
         todo_items = qry.filter(tag_filter)
         count = todo_items.count()
-        item_label = 'items' if count > 1 else 'item'
         subtext = (
             '<span class="count">%s</span> %s matching '
             '<span class="label label-warning">%s</span>'
         )
+        item_label = 'items' if count > 1 or count == 0 else 'item'
         grid = TodoGrid(
             self.request,
             tag_name,

@@ -1,8 +1,12 @@
 <metal:master use-macro="view.global_template">
   <div metal:fill-slot="content">
 
-    <table class="table table-striped">
-        <span tal:condition="items" tal:replace="structure grid"></span>
+    <p tal:condition="not items">
+      You have finished <b>all</b> of your tasks!
+    </p>
+
+    <table class="table table-striped" tal:condition="items">
+        <span tal:replace="structure grid"></span>
     </table>
 
   </div>

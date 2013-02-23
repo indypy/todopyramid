@@ -52,24 +52,31 @@
     </div>
 
     <div class="container">
-      <!--! Flash messages -->
-      <tal:message condition="request.session.peek_flash()">
-          <div class="alert"
-               tal:repeat="message request.session.pop_flash()">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            ${message}
-          </div>
-      </tal:message>
-      <!--! Flash messages from specific queues -->
-      <tal:newsflash repeat="flash_type ['success', 'info', 'error']">
-        <tal:message condition="request.session.peek_flash(flash_type)">
-            <div tal:repeat="message request.session.pop_flash(flash_type)"
-                 tal:attributes="class string:alert alert-$flash_type">
+      <div id="flash-messages">
+        <!--! Flash messages -->
+        <!--! one flash message that can be used by js -->
+        <div class="alert hide">
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+        <!--! Standard flash messages -->
+        <tal:message condition="request.session.peek_flash()">
+            <div class="alert"
+                 tal:repeat="message request.session.pop_flash()">
               <button type="button" class="close" data-dismiss="alert">&times;</button>
               ${message}
             </div>
         </tal:message>
-      </tal:newsflash>
+        <!--! Flash messages from specific queues -->
+        <tal:newsflash repeat="flash_type ['success', 'info', 'error']">
+          <tal:message condition="request.session.peek_flash(flash_type)">
+              <div tal:repeat="message request.session.pop_flash(flash_type)"
+                   tal:attributes="class string:alert alert-$flash_type">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                ${message}
+              </div>
+          </tal:message>
+        </tal:newsflash>
+      </div>
 
       <!--! Page Title -->
       <div class="page-header" tal:condition="page_title | None">
@@ -77,9 +84,11 @@
       </div>
 
       <!--! Page Content from other templates -->
-      <metal:content define-slot="content">
-        Site content goes here
-      </metal:content>
+      <div id="content">
+        <metal:content define-slot="content">
+          Site content goes here
+        </metal:content>
+      </div>
 
     </div>
 

@@ -13,8 +13,24 @@ $(function() {
                     {'id': todo_id},
                     function(json) {
                         if (json) {
-                            sid = "#" + todo_id;
+                            // Delete the row
                             task.remove();
+                            // Display a confirmation message
+                            var flash = $('div.alert.hide').clone();
+                            flash.html(flash.html() + "The item '" + task_name + "' was deleted");
+                            flash.removeClass('hide');
+                            flash.addClass('alert-success');
+                            $('#flash-messages').append(flash);
+                            flash.show();
+                            // Change the count on the page
+                            var count = $('.count');
+                            var new_count = parseInt(count.text(), 10) - 1;
+                            count.text(new_count);
+                            // Remove the table if we deleted the last item
+                            if (new_count === 0) {
+                                $('.table').hide();
+                                $('#content').append('<p>All done, nice work!</p>');
+                            }
                         }
                     }
                 );

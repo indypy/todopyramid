@@ -10,6 +10,16 @@
     </table>
 
   </div>
+
+  <metal:subtext fill-slot="subtext">
+    <tal:list_view condition="not tag_name | True">
+      <span class="count">${count}</span> ${item_label} remaining
+    </tal:list_view>
+    <tal:tag_view condition="tag_name | None">
+      <span class="count">${count}</span> ${item_label} matching <span class="label label-warning">${tag_name}</span>
+    </tal:tag_view>
+  </metal:subtext>
+
   <!--! Ironically filling the CSS slot here so that the code above for the moment junk works -->
   <metal:css fill-slot="css">
     <script src="${request.static_url('todopyramid:static/moment.min.js')}"></script>

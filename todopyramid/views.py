@@ -145,6 +145,10 @@ class ToDoViews(Layouts):
     def forbidden(self):
         return {}
 
+    @view_config(route_name='about', renderer='templates/about.pt')
+    def about_view(self):
+        return {'section': 'about'}
+
     @view_config(route_name='logout', check_csrf=True)
     def logout(self):
         headers = forget(self.request)

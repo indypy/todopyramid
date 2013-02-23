@@ -30,6 +30,7 @@ def main(global_config, **settings):
     )
     # Misc. views
     config.add_route('home', '/')
+    config.add_route('about', '/about')
     # Users
     config.add_route('account', '/account')
     # Viewing todo lists

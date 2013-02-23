@@ -16,6 +16,7 @@ requires = [
     'waitress',
     'deform_bootstrap',
     'pyramid_persona',
+    'WebHelpers',
 ]
 
 setup(

@@ -68,7 +68,7 @@ class TodoItem(Base):
 
     @property
     def past_due(self):
-        return self.due_date < datetime.utcnow()
+        return self.due_date and self.due_date < datetime.utcnow()
 
 
 class TodoUser(Base):

@@ -14,6 +14,8 @@ from peppercorn import parse
 from pyramid_persona.views import verify_login
 from sqlalchemy.exc import DBAPIError
 import transaction
+from webhelpers.html.builder import HTML
+from webhelpers.html.grid import ObjectGrid
 
 from .scripts.initializedb import create_dummy_content
 from .layouts import Layouts
@@ -22,6 +24,92 @@ from .models import Tag
 from .models import TodoItem
 from .models import TodoUser
 from .schema import SettingsSchema
+
+
+
+class TodoGrid(ObjectGrid):
+    def __init__(self, request, selected_tag, *args, **kwargs):
+        self.request = request
+        if 'url' not in kwargs:
+            kwargs['url'] = request.current_route_url
+        super(TodoGrid, self).__init__(*args, **kwargs)
+        self.exclude_ordering = ['_numbered', 'tags']
+        self.column_formats['due_date'] = self.due_date_td
+        self.column_formats['tags'] = self.tags_td
+        self.column_formats[''] = self.action_td
+        self.selected_tag = selected_tag
+
+    def generate_header_link(self, column_number, column, label_text):
+        """This handles generation of link and then decides to call
+        self.default_header_ordered_column_format or self.default_header_column_format
+        based on whether current column is the one that is used for sorting.
+
+        You need to extend Grid class and overload this method implementing
+        ordering here, whole operation consists of setting self.order_column and
+        self.order_dir to their CURRENT values, and generating new urls for state
+        that header should set set after its clicked
+
+        (additional kw are passed to url gen. - like for webhelpers.paginate)
+        """
+        GET = dict(self.request.copy().GET) # needs dict() for py2.5 compat
+        self.order_column = GET.pop("order_col", None)
+        self.order_dir = GET.pop("order_dir", None)
+        # determine new order
+        if column == self.order_column and self.order_dir == "asc":
+            new_order_dir = "desc"
+        else:
+            new_order_dir = "asc"
+        self.additional_kw['order_col'] = column
+        self.additional_kw['order_dir'] = new_order_dir
+        # generate new url for example url_generator uses
+        # pylons's url.current() or pyramid's current_route_url()
+        new_url = self.url_generator(_query=self.additional_kw)
+        # set label for header with link
+        label_text = HTML.tag("a", href=new_url, c=label_text)
+        return super(TodoGrid, self).generate_header_link(column_number,
+                                                             column,
+                                                             label_text)
+
+    def tags_td(self, col_num, i, item):
+        tag_links = []
+
+        for tag in item.sorted_tags:
+            tag_url = self.url_generator('tag', tag.name)
+            tag_class = 'label'
+            if self.selected_tag and tag.name == self.selected_tag:
+                tag_class += ' label-warning'
+            else:
+                tag_class += ' label-info'
+            anchor = HTML.tag("a", href=tag_url, c=tag.name,
+                              class_=tag_class)
+            tag_links.append(anchor)
+        return HTML.td(*tag_links, _nl=True)
+
+    def due_date_td(self, col_num, i, item):
+        if item.due_date is None:
+            return HTML.td('')
+        span_class = 'badge'
+        if item.past_due:
+            span_class += ' badge-important'
+        span = HTML.tag("span",
+                        c=HTML.literal(pretty_date(item.due_date)),
+                        class_=span_class)
+        return HTML.td(span)
+
+    def action_td(self, col_num, i, item):
+        return HTML.td(HTML.literal("""\
+        <div class="btn-group">
+          <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+          Action
+          <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li><a href="#">Edit</a></li>
+            <li><a href="#">Postpone</a></li>
+            <li><a href="#">Complete</a></li>
+          </ul>
+        </div>
+        """))
 
 
 class ToDoViews(Layouts):
@@ -49,16 +137,6 @@ class ToDoViews(Layouts):
         js_links = ['deform:static/%s' % r for r in js_resources]
         css_links = ['deform:static/%s' % r for r in css_resources]
         return (css_links, js_links)
-
-    def pretty_date(self, item_date):
-        """Shoehorn the moment.js code into the template. Based on this
-        blog: http://blog.miguelgrinberg.com/
-        """
-        fmt_date = item_date.strftime('%Y-%m-%dT%H:%M:%S Z')
-        return """
-<script>
-  document.write(moment("%s").calendar());
-</script>""" % fmt_date
 
     @notfound_view_config(renderer='templates/404.pt')
     def notfound(self):
@@ -162,8 +240,19 @@ class ToDoViews(Layouts):
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')
     def list_view(self):
-        todo_items = self.user.todo_list.order_by(
-            'due_date IS NULL').all()
+        #todo_items = self.user.todo_list.order_by(
+        #    'due_date IS NULL').all()
+        order = self.request.GET.get('order_col', 'due_date IS NULL')
+        order_dir = self.request.GET.get('order_dir', '')
+        if order_dir:
+            order = ' '.join([order, order_dir])
+        todo_items = self.user.todo_list.order_by(order).all()
+        grid = TodoGrid(
+            self.request,
+            None,
+            todo_items,
+            ['task', 'tags', 'due_date', '']
+        )
         count = len(todo_items)
         item_label = 'items' if count > 1 else 'item'
         return {
@@ -171,6 +260,7 @@ class ToDoViews(Layouts):
             'subtext': '%s %s remaining' % (count, item_label),
             'section': 'list',
             'items': todo_items,
+            'grid': grid,
         }
 
     @view_config(route_name='tags', renderer='templates/todo_tags.pt',
@@ -187,18 +277,40 @@ class ToDoViews(Layouts):
                  permission='view')
     def tag_view(self):
         tag_name = self.request.matchdict['tag_name']
-        todo_items = self.user.todo_list.order_by('due_date IS NULL').filter(
-            TodoItem.tags.any(Tag.name.in_([tag_name])))
+        order = self.request.GET.get('order_col', 'due_date IS NULL')
+        order_dir = self.request.GET.get('order_dir', '')
+        if order_dir:
+            order = ' '.join([order, order_dir])
+        qry = self.user.todo_list.order_by(order)
+        tag_filter = TodoItem.tags.any(Tag.name.in_([tag_name]))
+        todo_items = qry.filter(tag_filter)
         count = todo_items.count()
         item_label = 'items' if count > 1 else 'item'
         subtext = '%s %s matching <span class="label label-warning">%s</span>'
+        grid = TodoGrid(
+            self.request,
+            tag_name,
+            todo_items,
+            ['task', 'tags', 'due_date', '']
+        )
         return {
             'page_title': 'Tag List',
             'subtext':  subtext % (count, item_label, tag_name),
             'section': 'tags',
             'tag_name': tag_name,
             'items': todo_items,
+            'grid': grid,
         }
+
+def pretty_date(item_date):
+    """Shoehorn the moment.js code into the template. Based on this
+    blog: http://blog.miguelgrinberg.com/
+    """
+    fmt_date = item_date.strftime('%Y-%m-%dT%H:%M:%S Z')
+    return """
+<script>
+  document.write(moment("%s").calendar());
+</script>""" % fmt_date
 
 conn_err_msg = """\
 Pyramid is having a problem using your SQL database.  The problem

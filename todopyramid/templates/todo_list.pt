@@ -1,44 +1,7 @@
 <metal:master use-macro="view.global_template">
   <div metal:fill-slot="content">
-    <table class="table table-striped"
-           tal:define="selected_tag tag_name | None">
-      <thead>
-        <tr>
-          <th>Task</th>
-          <th>Tags</th>
-          <th>Due</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr tal:repeat="item items">
-          <td>${item.task}</td>
-          <td>
-            <a href="${request.application_url}/tags/${tag.name}"
-               tal:repeat="tag item.sorted_tags"
-               tal:attributes="class selected_tag == tag.name and 'label label-warning' or 'label label-info'">${tag.name}</a>
-          </td>
-          <td>
-            <span tal:condition="item.due_date"
-               tal:attributes="class item.past_due and 'badge badge-important' or 'badge'">
-              <tal:moment replace="structure view.pretty_date(item.due_date)" />
-            </span>
-          </td>
-          <td>
-            <div class="btn-group">
-              <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-              Action
-              <span class="caret"></span>
-              </a>
-              <ul class="dropdown-menu">
-                <li><a href="#">Edit</a></li>
-                <li><a href="#">Postpone</a></li>
-                <li><a href="#">Complete</a></li>
-              </ul>
-            </div>
-          </td>
-        </tr>
-      </tbody>
+    <table class="table table-striped">
+        <span tal:condition="items" tal:replace="structure grid"></span>
     </table>
   </div>
   <!--! Ironically filling the CSS slot here so that the code above for the moment junk works -->

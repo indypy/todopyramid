@@ -18,7 +18,7 @@ def main(global_config, **settings):
         root_factory='todopyramid.models.RootFactory',
     )
     config.include('pyramid_persona')
-    config.include('deform_bootstrap')
+    config.include('deform_bootstrap_extra')
     config.add_static_view('static', 'static', cache_max_age=3600)
     # Adding the static resources from Deform
     config.add_static_view(
@@ -26,6 +26,10 @@ def main(global_config, **settings):
     )
     config.add_static_view(
         'deform_bootstrap_static', 'deform_bootstrap:static',
+        cache_max_age=3600
+    )
+    config.add_static_view(
+        'deform_bootstrap_extra_static', 'deform_bootstrap_extra:static',
         cache_max_age=3600
     )
     # Misc. views

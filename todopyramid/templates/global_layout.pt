@@ -7,21 +7,35 @@
     <meta name="description" content="The Pyramid version of the todo app">
     <meta name="author" content="Six Feet Up, Inc.">
 
+    <!-- Le styles -->
+
+    <!-- Generated resources -->
     <tal:resources repeat="css_path css_resources | []">
       <link rel="stylesheet" media="screen" type="text/css"
             tal:attributes="href python: request.static_url(css_path)" />
     </tal:resources>
 
-    <!-- Le styles -->
     <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
           href="${request.static_url('deform_bootstrap:static/deform_bootstrap.css')}" />
-    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
-          href="${request.static_url('deform_bootstrap:static/chosen_bootstrap.css')}" />
 
     <metal:css define-slot="css"/>
 
     <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
           href="${request.static_url('todopyramid:static/main.css')}" />
+
+    <!-- Le javascript, which unfortunately has to be at the top for Deform to work -->
+    <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
+    <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
+
+    <!-- Generated Resources -->
+    <tal:resources repeat="js_path js_resources | []">
+        <script type="text/javascript"
+                tal:attributes="src request.static_url(js_path)"></script>
+    </tal:resources>
+
+    <metal:js define-slot="javascript"/>
 
   </head>
 
@@ -97,30 +111,9 @@
       <p>Created by <a href="http://www.sixfeetup.com">Six Feet Up, Inc.</a> &mdash; Get the code on <a href="https://github.com/indypy/todopyramid#readme">GitHub</a></p>
     </footer>
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <!-- jQuery -->
-    <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
-    <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-1.8.18.custom.min.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-timepicker-addon-0.9.9.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
-    <!-- Bootstrap -->
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap-datepicker.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap-typeahead.js')}"></script>
-    <!-- Persona -->
+    <!-- Persona, loading at the bottom because it takes forever -->
     <script src="https://login.persona.org/include.js" type="text/javascript"></script>
     <script type="text/javascript">${request.persona_js}</script>
-
-    <!-- Generated Resources -->
-    <tal:resources repeat="js_path js_resources | []">
-        <script type="text/javascript"
-                tal:attributes="src request.static_url(js_path)"></script>
-    </tal:resources>
-
-    <metal:js define-slot="javascript"/>
 
   </body>
 </html>

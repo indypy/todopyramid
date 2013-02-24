@@ -12,6 +12,7 @@ from deform import Form
 from deform import ValidationFailure
 from peppercorn import parse
 from pyramid_persona.views import verify_login
+from pytz import timezone
 from sqlalchemy.exc import DBAPIError
 import transaction
 from webhelpers.html.builder import HTML
@@ -24,6 +25,7 @@ from .models import Tag
 from .models import TodoItem
 from .models import TodoUser
 from .schema import SettingsSchema
+from .schema import TodoSchema
 
 
 class TodoGrid(ObjectGrid):
@@ -37,6 +39,7 @@ class TodoGrid(ObjectGrid):
         self.column_formats['tags'] = self.tags_td
         self.column_formats[''] = self.action_td
         self.selected_tag = selected_tag
+        self.user_tz = kwargs.get('user_tz', u'US/Eastern')
 
     def generate_header_link(self, column_number, column, label_text):
         """This handles generation of link and then decides to call
@@ -91,8 +94,11 @@ class TodoGrid(ObjectGrid):
         span_class = 'badge'
         if item.past_due:
             span_class += ' badge-important'
+        due_date = item.due_date
+        tz = timezone(self.user_tz)
+        localized_date = tz.localize(due_date)
         span = HTML.tag("span",
-                        c=HTML.literal(pretty_date(item.due_date)),
+                        c=HTML.literal(pretty_date(localized_date)),
                         class_=span_class)
         return HTML.td(span)
 
@@ -211,6 +217,7 @@ class ToDoViews(Layouts):
             with transaction.manager:
                 self.user.first_name = values.get('first_name', u'')
                 self.user.last_name = values.get('last_name', u'')
+                self.user.time_zone = values.get('time_zone', u'US/Eastern')
                 DBSession.add(self.user)
             self.request.session.flash(
                 'Settings updated successfully',
@@ -231,6 +238,18 @@ class ToDoViews(Layouts):
             'js_resources': js_resources,
             'section': section_name,
         }
+
+    @view_config(renderer='json', name='tags.autocomplete', permission='view')
+    def tag_autocomplete(self):
+        term = self.request.params.get('term', '')
+        if len(term) < 2:
+            return []
+        # XXX: This is global tags, need to hook into "user_tags"
+        tags = DBSession.query(Tag).filter(Tag.name.startswith(term)).all()
+        return [
+            dict(id=tag.name, value=tag.name, label=tag.name)
+            for tag in tags
+        ]
 
     @view_config(renderer='json', name='delete.task', permission='view')
     def delete_task(self):
@@ -264,19 +283,89 @@ class ToDoViews(Layouts):
             order = ' '.join([order, order_dir])
         return order
 
+    def generate_add_form(self):
+        schema = TodoSchema().bind(user_tz=self.user.time_zone)
+        options = """
+        {success:
+          function (rText, sText, xhr, form) {
+            deform.processCallbacks();
+            deform.focusFirstInput();
+            var loc = xhr.getResponseHeader('X-Relocate');
+            if (loc) {
+              document.location = loc;
+            };
+           }
+        }
+        """
+        return Form(
+            schema,
+            buttons=('submit',),
+            use_ajax=True,
+            ajax_options=options,
+        )
+
+    def process_add_form(self, form):
+        try:
+            # try to validate the submitted values
+            controls = self.request.POST.items()
+            captured = form.validate(controls)
+            with transaction.manager:
+                tags = captured.get('tags', [])
+                if tags:
+                    tags = tags.split(',')
+                due_date = captured.get('due_date')
+                if due_date is not None:
+                    # Convert back to UTC for storage
+                    utc = timezone('UTC')
+                    utc_date = due_date.astimezone(utc)
+                    # Make it a naive date
+                    due_date = utc_date.replace(tzinfo=None)
+                task_name = captured.get('name')
+                task = TodoItem(
+                    user=self.user_id,
+                    task=task_name,
+                    tags=tags,
+                    due_date=due_date,
+                )
+                DBSession.add(task)
+            msg = "New task '%s' created successfully" % task_name
+            self.request.session.flash(
+                msg,
+                queue='success',
+            )
+            # Reload the page we were on
+            location = self.request.url
+            return Response(
+                '',
+                headers=[
+                    ('X-Relocate', location),
+                    ('Content-Type', 'text/html'),
+                ]
+            )
+            html = form.render({})
+        except ValidationFailure as e:
+            # the submitted values could not be validated
+            html = e.render()
+        return Response(html)
+
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')
     def list_view(self):
+        form = self.generate_add_form()
+        if 'submit' in self.request.POST:
+            return self.process_add_form(form)
         order = self.sort_order()
         todo_items = self.user.todo_list.order_by(order).all()
         grid = TodoGrid(
             self.request,
             None,
             todo_items,
-            ['task', 'tags', 'due_date', '']
+            ['task', 'tags', 'due_date', ''],
+            user_tz=self.user.time_zone,
         )
         count = len(todo_items)
         item_label = 'items' if count > 1 or count == 0 else 'item'
+        css_resources, js_resources = self.form_resources(form)
         return {
             'page_title': 'Todo List',
             'count': count,
@@ -284,6 +373,9 @@ class ToDoViews(Layouts):
             'section': 'list',
             'items': todo_items,
             'grid': grid,
+            'form': form.render(),
+            'css_resources': css_resources,
+            'js_resources': js_resources,
         }
 
     @view_config(route_name='tags', renderer='templates/todo_tags.pt',
@@ -299,6 +391,9 @@ class ToDoViews(Layouts):
     @view_config(route_name='tag', renderer='templates/todo_list.pt',
                  permission='view')
     def tag_view(self):
+        form = self.generate_add_form()
+        if 'submit' in self.request.POST:
+            return self.process_add_form(form)
         order = self.sort_order()
         qry = self.user.todo_list.order_by(order)
         tag_name = self.request.matchdict['tag_name']
@@ -310,8 +405,10 @@ class ToDoViews(Layouts):
             self.request,
             tag_name,
             todo_items,
-            ['task', 'tags', 'due_date', '']
+            ['task', 'tags', 'due_date', ''],
+            user_tz=self.user.time_zone,
         )
+        css_resources, js_resources = self.form_resources(form)
         return {
             'page_title': 'Tag List',
             'count': count,
@@ -320,6 +417,9 @@ class ToDoViews(Layouts):
             'tag_name': tag_name,
             'items': todo_items,
             'grid': grid,
+            'form': form.render({'tags': tag_name}),
+            'css_resources': css_resources,
+            'js_resources': js_resources,
         }
 
 

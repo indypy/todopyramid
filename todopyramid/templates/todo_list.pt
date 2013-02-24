@@ -1,6 +1,12 @@
 <metal:master use-macro="view.global_template">
   <div metal:fill-slot="content">
 
+    <!--! Button to trigger modal dialog for task addition -->
+    <a href="#add-task" role="button" class="btn btn-success" data-toggle="modal">
+      Add Task
+    </a>
+    <br /><br />
+
     <p tal:condition="not items">
       You have finished <b>all</b> of your tasks!
     </p>
@@ -8,6 +14,17 @@
     <table class="table table-striped" tal:condition="items">
         <span tal:replace="structure grid"></span>
     </table>
+
+    <!--! Add form for tasks -->
+    <div id="add-task" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="add-task-label" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="add-task-label">Add Task</h3>
+      </div>
+      <div class="modal-body">
+        <tal:form replace="structure form" />
+      </div>
+    </div>
 
   </div>
 
@@ -22,10 +39,24 @@
 
   <!--! Ironically filling the CSS slot here so that the code above for the moment junk works -->
   <metal:css fill-slot="css">
+    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('deform:static/css/jquery.autocomplete.css')}" />
+    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('deform:static/css/ui-lightness/jquery-ui-1.8.11.custom.css')}" />
+    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('deform:static/css/jquery-ui-timepicker-addon.css')}" />
+    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('deform_bootstrap_extra:static/jQuery-Tags-Input/jquery.tagsinput.css')}" />
     <script src="${request.static_url('todopyramid:static/moment.min.js')}"></script>
   </metal:css>
 
   <metal:js fill-slot="javascript">
+    <script src="${request.static_url('deform:static/scripts/jquery-ui-1.8.11.custom.min.js')}"></script>
+    <script src="${request.static_url('deform:static/scripts/jquery-ui-timepicker-addon.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap_extra:static/jQuery-Tags-Input/jquery.tagsinput.min.js')}"></script>
+    <script>
+      deform.load()
+    </script>
     <script src="${request.static_url('todopyramid:static/bootbox.min.js')}"></script>
     <script src="${request.static_url('todopyramid:static/todo_list.js')}"></script>
   </metal:js>

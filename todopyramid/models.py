@@ -76,12 +76,15 @@ class TodoUser(Base):
     email = Column(Text, primary_key=True)
     first_name = Column(Text)
     last_name = Column(Text)
+    time_zone = Column(Text)
     todo_list = relationship(TodoItem, lazy='dynamic')
 
-    def __init__(self, email, first_name=None, last_name=None):
+    def __init__(self, email, first_name=None, last_name=None,
+                 time_zone=u'US/Eastern'):
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
+        self.time_zone = time_zone
 
     @property
     def user_tags(self):

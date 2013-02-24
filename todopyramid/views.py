@@ -139,6 +139,7 @@ class ToDoViews(Layouts):
             appstruct = dict(
                 first_name=self.user.first_name,
                 last_name=self.user.last_name,
+                time_zone=self.user.time_zone,
             )
         else:
             appstruct = {}

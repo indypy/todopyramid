@@ -33,7 +33,7 @@ def create_dummy_content(user_id):
         user=user_id,
         task=u'Find a shrubbery',
         tags=[u'quest', u'ni', u'knight'],
-        due_date=datetime.utcnow() + timedelta(days=1),
+        due_date=datetime.utcnow() + timedelta(days=60),
     )
     DBSession.add(task)
     task = TodoItem(
@@ -46,7 +46,7 @@ def create_dummy_content(user_id):
     task = TodoItem(
         user=user_id,
         task=u'Recruit Knights of the Round Table',
-        tags=[u'quest', u'knight'],
+        tags=[u'quest', u'knight', u'discuss'],
         due_date=datetime.utcnow() + timedelta(minutes=45),
     )
     DBSession.add(task)
@@ -54,13 +54,27 @@ def create_dummy_content(user_id):
         user=user_id,
         task=u'Build a Trojan Rabbit',
         tags=[u'quest', u'rabbit'],
-        due_date=datetime.utcnow() + timedelta(days=60),
+        due_date=datetime.utcnow() + timedelta(days=1),
+    )
+    DBSession.add(task)
+    task = TodoItem(
+        user=user_id,
+        task=u'Talk to Tim the Enchanter',
+        tags=[u'quest', u'discuss'],
+        due_date=datetime.utcnow() + timedelta(days=90),
     )
     DBSession.add(task)
     task = TodoItem(
         user=user_id,
         task=u'Defeat the Rabbit of Caerbannog',
         tags=[u'quest', u'rabbit'],
+        due_date=None,
+    )
+    DBSession.add(task)
+    task = TodoItem(
+        user=user_id,
+        task=u'Cross the Bridge of Death',
+        tags=[u'quest'],
         due_date=None,
     )
     DBSession.add(task)

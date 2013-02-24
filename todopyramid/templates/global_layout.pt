@@ -26,14 +26,15 @@
     <!-- Le javascript, which unfortunately has to be at the top for Deform to work -->
     <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
     <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
 
     <!-- Generated Resources -->
     <tal:resources repeat="js_path js_resources | []">
         <script type="text/javascript"
                 tal:attributes="src request.static_url(js_path)"></script>
     </tal:resources>
+
+    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
 
     <metal:js define-slot="javascript"/>
 

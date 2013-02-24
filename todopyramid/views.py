@@ -12,7 +12,6 @@ from deform import Form
 from deform import ValidationFailure
 from peppercorn import parse
 from pyramid_persona.views import verify_login
-from pytz import timezone
 from sqlalchemy.exc import DBAPIError
 import transaction
 
@@ -25,6 +24,7 @@ from .models import TodoItem
 from .models import TodoUser
 from .schema import SettingsSchema
 from .schema import TodoSchema
+from .utils import universify_datetime
 
 
 class ToDoViews(Layouts):
@@ -227,10 +227,7 @@ class ToDoViews(Layouts):
                 due_date = captured.get('due_date')
                 if due_date is not None:
                     # Convert back to UTC for storage
-                    utc = timezone('UTC')
-                    utc_date = due_date.astimezone(utc)
-                    # Make it a naive date
-                    due_date = utc_date.replace(tzinfo=None)
+                    due_date = universify_datetime(due_date)
                 task_name = captured.get('name')
                 task = TodoItem(
                     user=self.user_id,

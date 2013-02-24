@@ -1,6 +1,7 @@
-from pytz import timezone
 from webhelpers.html.builder import HTML
 from webhelpers.html.grid import ObjectGrid
+
+from .utils import localize_datetime
 
 
 def pretty_date(item_date):
@@ -9,10 +10,10 @@ def pretty_date(item_date):
 
     XXX: remove this and do it via jQuery
     """
-    fmt_date = item_date.strftime('%Y-%m-%dT%H:%M:%S Z')
+    fmt_date = item_date.strftime('%Y-%m-%d %H:%M')
     return """
 <script>
-  document.write(moment("%s").calendar());
+  document.write(moment("%s", "YYYY-MM-DD HH:mm").calendar());
 </script>""" % fmt_date
 
 
@@ -126,11 +127,9 @@ class TodoGrid(ObjectGrid):
         span_class = 'badge'
         if item.past_due:
             span_class += ' badge-important'
-        due_date = item.due_date
-        tz = timezone(self.user_tz)
-        localized_date = tz.localize(due_date)
+        due_date = localize_datetime(item.due_date, self.user_tz)
         span = HTML.tag("span",
-                        c=HTML.literal(pretty_date(localized_date)),
+                        c=HTML.literal(pretty_date(due_date)),
                         class_=span_class)
         return HTML.td(span)
 

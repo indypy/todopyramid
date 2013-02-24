@@ -76,8 +76,8 @@ class TodoGrid(ObjectGrid):
         that represents the sort order for the column.
         """
         icon_direction = self.order_dir == 'asc' and 'up' or 'down'
-        icon = 'icon-chevron-%s' % icon_direction
-        icon_tag = HTML.tag("i", class_="icon %s" % icon)
+        icon_class = 'icon-chevron-%s' % icon_direction
+        icon_tag = HTML.tag("i", class_=icon_class)
         header_label = HTML(header_label, " ", icon_tag)
         if column_name == "_numbered":
             column_name = "numbered"

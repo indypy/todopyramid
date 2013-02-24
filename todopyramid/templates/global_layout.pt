@@ -17,6 +17,8 @@
 
     <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
           href="${request.static_url('deform_bootstrap:static/deform_bootstrap.css')}" />
+    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('todopyramid:static/bootglyph/css/icon.css')}" />
 
     <metal:css define-slot="css"/>
 

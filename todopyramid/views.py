@@ -29,7 +29,11 @@ from .schema import TodoSchema
 
 
 class TodoGrid(ObjectGrid):
-    def __init__(self, request, selected_tag, *args, **kwargs):
+    """A generated table for the todo list that supports ordering of
+    the task name and due date columns. We also customize the init so
+    that we accept the selected_tag and user_tz.
+    """
+
     def __init__(self, request, selected_tag, user_tz, *args, **kwargs):
         self.request = request
         if 'url' not in kwargs:
@@ -43,19 +47,10 @@ class TodoGrid(ObjectGrid):
         self.user_tz = user_tz
 
     def generate_header_link(self, column_number, column, label_text):
-        """This handles generation of link and then decides to call
-        self.default_header_ordered_column_format or
-        self.default_header_column_format
-        based on whether current column is the one that is used for sorting.
-
-        You need to extend Grid class and overload this method implementing
-        ordering here, whole operation consists of setting self.order_column
-        and self.order_dir to their CURRENT values, and generating new urls for
-        state that header should set set after its clicked
-
-        (additional kw are passed to url gen. - like for webhelpers.paginate)
+        """Override of the ObjectGrid to customize the headers. This is
+        mostly taken from the example code in ObjectGrid itself.
         """
-        GET = dict(self.request.copy().GET)  # needs dict() for py2.5 compat
+        GET = dict(self.request.copy().GET)
         self.order_column = GET.pop("order_col", None)
         self.order_dir = GET.pop("order_dir", None)
         # determine new order
@@ -65,14 +60,62 @@ class TodoGrid(ObjectGrid):
             new_order_dir = "desc"
         self.additional_kw['order_col'] = column
         self.additional_kw['order_dir'] = new_order_dir
-        # generate new url for example url_generator uses
-        # pylons's url.current() or pyramid's current_route_url()
         new_url = self.url_generator(_query=self.additional_kw)
         # set label for header with link
         label_text = HTML.tag("a", href=new_url, c=label_text)
         return super(TodoGrid, self).generate_header_link(column_number,
                                                              column,
                                                              label_text)
+
+    def default_header_column_format(self, column_number, column_name,
+        header_label):
+        """Override of the ObjectGrid to use <th> for header columns
+        """
+        if column_name == "_numbered":
+            column_name = "numbered"
+        if column_name in self.exclude_ordering:
+            class_name = "c%s %s" % (column_number, column_name)
+            return HTML.tag("th", header_label, class_=class_name)
+        else:
+            header_label = HTML(
+                header_label, HTML.tag("span", class_="marker"))
+            class_name = "c%s ordering %s" % (column_number, column_name)
+            return HTML.tag("th", header_label, class_=class_name)
+
+    def default_header_ordered_column_format(self, column_number, column_name,
+                                             header_label):
+        """Override of the ObjectGrid to use <th> and to add an icon
+        that represents the sort order for the column.
+        """
+        icon_direction = self.order_dir == 'asc' and 'up' or 'down'
+        icon = 'icon-chevron-%s' % icon_direction
+        icon_tag = HTML.tag("i", class_="icon %s" % icon)
+        header_label = HTML(header_label, " ", icon_tag)
+        if column_name == "_numbered":
+            column_name = "numbered"
+        class_name = "c%s ordering %s %s" % (
+            column_number, self.order_dir, column_name)
+        return HTML.tag("th", header_label, class_=class_name)
+
+    def __html__(self):
+        """Override of the ObjectGrid to use a <thead> so that bootstrap
+        renders the styles correctly
+        """
+        records = []
+        # first render headers record
+        headers = self.make_headers()
+        r = self.default_header_record_format(headers)
+        # Wrap the headers in a thead
+        records.append(HTML.tag('thead', r))
+        # now lets render the actual item grid
+        for i, record in enumerate(self.itemlist):
+            columns = self.make_columns(i, record)
+            if hasattr(self, 'custom_record_format'):
+                r = self.custom_record_format(i + 1, record, columns)
+            else:
+                r = self.default_record_format(i + 1, record, columns)
+            records.append(r)
+        return HTML(*records)
 
     def tags_td(self, col_num, i, item):
         tag_links = []

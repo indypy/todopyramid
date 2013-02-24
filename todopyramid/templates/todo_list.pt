@@ -12,7 +12,7 @@
     </p>
 
     <table class="table table-striped" tal:condition="items">
-        <span tal:replace="structure grid"></span>
+        <tal:rows replace="structure grid" />
     </table>
 
     <!--! Add form for tasks -->

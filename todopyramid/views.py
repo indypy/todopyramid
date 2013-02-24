@@ -30,6 +30,7 @@ from .schema import TodoSchema
 
 class TodoGrid(ObjectGrid):
     def __init__(self, request, selected_tag, *args, **kwargs):
+    def __init__(self, request, selected_tag, user_tz, *args, **kwargs):
         self.request = request
         if 'url' not in kwargs:
             kwargs['url'] = request.current_route_url
@@ -39,7 +40,7 @@ class TodoGrid(ObjectGrid):
         self.column_formats['tags'] = self.tags_td
         self.column_formats[''] = self.action_td
         self.selected_tag = selected_tag
-        self.user_tz = kwargs.get('user_tz', u'US/Eastern')
+        self.user_tz = user_tz
 
     def generate_header_link(self, column_number, column, label_text):
         """This handles generation of link and then decides to call
@@ -55,9 +56,6 @@ class TodoGrid(ObjectGrid):
         (additional kw are passed to url gen. - like for webhelpers.paginate)
         """
         GET = dict(self.request.copy().GET)  # needs dict() for py2.5 compat
-        # Remove the user tz var so it doesn't show in the url
-        if 'user_tz' in self.additional_kw:
-            self.additional_kw.pop('user_tz')
         self.order_column = GET.pop("order_col", None)
         self.order_dir = GET.pop("order_dir", None)
         # determine new order
@@ -362,9 +360,9 @@ class ToDoViews(Layouts):
         grid = TodoGrid(
             self.request,
             None,
+            self.user.time_zone,
             todo_items,
             ['task', 'tags', 'due_date', ''],
-            user_tz=self.user.time_zone,
         )
         count = len(todo_items)
         item_label = 'items' if count > 1 or count == 0 else 'item'
@@ -407,9 +405,9 @@ class ToDoViews(Layouts):
         grid = TodoGrid(
             self.request,
             tag_name,
+            self.user.time_zone,
             todo_items,
             ['task', 'tags', 'due_date', ''],
-            user_tz=self.user.time_zone,
         )
         css_resources, js_resources = self.form_resources(form)
         return {

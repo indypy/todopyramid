@@ -55,6 +55,9 @@ class TodoGrid(ObjectGrid):
         (additional kw are passed to url gen. - like for webhelpers.paginate)
         """
         GET = dict(self.request.copy().GET)  # needs dict() for py2.5 compat
+        # Remove the user tz var so it doesn't show in the url
+        if 'user_tz' in self.additional_kw:
+            self.additional_kw.pop('user_tz')
         self.order_column = GET.pop("order_col", None)
         self.order_dir = GET.pop("order_dir", None)
         # determine new order

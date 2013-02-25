@@ -6,10 +6,4 @@
     <tal:form replace="structure form">The form will render here</tal:form>
   </div>
 
-  <metal:js fill-slot="javascript">
-    <script>
-      deform.load()
-    </script>
-  </metal:js>
-
 </metal:master>

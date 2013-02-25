@@ -54,9 +54,6 @@
     <script src="${request.static_url('deform:static/scripts/jquery-ui-1.8.11.custom.min.js')}"></script>
     <script src="${request.static_url('deform:static/scripts/jquery-ui-timepicker-addon.js')}"></script>
     <script src="${request.static_url('deform_bootstrap_extra:static/jQuery-Tags-Input/jquery.tagsinput.min.js')}"></script>
-    <script>
-      deform.load()
-    </script>
     <script src="${request.static_url('todopyramid:static/bootbox.min.js')}"></script>
     <script src="${request.static_url('todopyramid:static/todo_list.js')}"></script>
   </metal:js>

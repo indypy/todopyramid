@@ -1,5 +1,45 @@
 $(function() {
 
+    // Edit a task when the edit link is clicked in the actions dropdown
+    $("a.todo-edit").click(function(e) {
+        e.preventDefault();
+        var todo_id = $(this).closest('ul').attr('id');
+        $.getJSON(
+            '/edit.task',
+            {'id': todo_id},
+            function(json) {
+                if (json) {
+                    edit_form = $('#task-form');
+                    // Set the title to Edit
+                    edit_form.find('h3').text('Edit Task');
+                    $.each(json, function(k, v) {
+                        // Set the value for each field from the returned json
+                        edit_form.find('input[name="' + k + '"]').attr('value', v);
+                        // Re-initialize the fancy tags input
+                        if (k === 'tags') {
+                            edit_form.find('input[name="tags"]').importTags(v);
+                        }
+                    });
+                    edit_form.modal('show');
+                }
+            }
+        );
+    });
+
+    // Make sure the task-form gets put back to a clean "add" on cancel of "edit"
+    $('#task-form').on('hidden', function () {
+        // Set the title back to add
+        $(this).find('h3').text('Add Task');
+        // Clear out the input values
+        $(this).find('input').each(function () {
+            $(this).attr('value', '');
+        });
+        // Clear out the fancy tags
+        $(this).find('div.tagsinput .tag').each(function () {
+            $(this).detach();
+        });
+    });
+
     // Compete a todo task when the link is clicked
     $("a.todo-complete").click(function(e) {
         e.preventDefault();

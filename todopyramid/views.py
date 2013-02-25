@@ -24,6 +24,7 @@ from .models import TodoItem
 from .models import TodoUser
 from .schema import SettingsSchema
 from .schema import TodoSchema
+from .utils import localize_datetime
 from .utils import universify_datetime
 
 
@@ -161,6 +162,27 @@ class ToDoViews(Layouts):
             dict(id=tag.name, value=tag.name, label=tag.name)
             for tag in tags
         ]
+
+    @view_config(renderer='json', name='edit.task', permission='view')
+    def edit_task(self):
+        """Get the values to fill in the edit form
+        """
+        todo_id = self.request.params.get('id', None)
+        if todo_id is None:
+            return False
+        task = DBSession.query(TodoItem).filter(
+            TodoItem.id == todo_id).first()
+        due_date = None
+        # If there is a due date, localize the time
+        if task.due_date is not None:
+            due_dt = localize_datetime(task.due_date, self.user.time_zone)
+            due_date = due_dt.strftime('%Y-%m-%d %H:%M:%S')
+        return dict(
+            id=task.id,
+            name=task.task,
+            tags=','.join([tag.name for tag in task.sorted_tags]),
+            due_date=due_date,
+        )
 
     @view_config(renderer='json', name='delete.task', permission='view')
     def delete_task(self):

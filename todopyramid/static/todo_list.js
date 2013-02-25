@@ -6,7 +6,8 @@ $(function() {
         var todo_id = $(this).closest('ul').attr('id');
         var task = $(this).closest('tr');
         var task_name = task.children().first().text();
-        bootbox.confirm("Delete '" + task_name + "'?", function(complete_item) {
+        var confirm_text = "<p>Confirm completion of <i>" + task_name + "</i></p><p>This action is not reversible and your task will be <b>deleted</b></p>";
+        bootbox.confirm(confirm_text, function(complete_item) {
             if (complete_item) {
                 $.getJSON(
                     '/delete.task',

@@ -26,6 +26,17 @@
       </div>
     </div>
 
+    <!--! Edit form for tasks -->
+    <div id="edit-task" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="edit-task-label" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="add-task-label">Edit Task</h3>
+      </div>
+      <div class="modal-body">
+        Edit form here
+      </div>
+    </div>
+
   </div>
 
   <metal:subtext fill-slot="subtext">

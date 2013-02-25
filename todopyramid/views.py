@@ -24,6 +24,7 @@ from .models import TodoItem
 from .models import TodoUser
 from .schema import SettingsSchema
 from .schema import TodoSchema
+from .utils import localize_datetime
 from .utils import universify_datetime
 
 
@@ -194,6 +195,25 @@ class ToDoViews(Layouts):
             order = ' '.join([order, order_dir])
         return order
 
+    @view_config(name='edit.task', permission='view')
+    def edit_task(self):
+        """Get the edit form for a given task so we can show a modal
+        window for editing on the list / tags view.
+        """
+        task_id = self.request.params.get('id', None)
+        task = DBSession.query(TodoItem).filter(TodoItem.id == task_id).first()
+        form = self.generate_task_form(formid='edit-task-form')
+        due_date = None
+        if task.due_date is not None:
+            due_date = localize_datetime(task.due_date, self.user.time_zone)
+        appstruct = dict(
+            id=task.id,
+            name=task.task,
+            tags=','.join([tag.name for tag in task.sorted_tags]),
+            due_date=due_date,
+        )
+        return Response(form.render(appstruct))
+
     def generate_task_form(self, formid="deform"):
         schema = TodoSchema().bind(user_tz=self.user.time_zone)
         options = """
@@ -262,7 +282,8 @@ class ToDoViews(Layouts):
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')
     def list_view(self):
-        form = self.generate_task_form()
+        formid = self.request.params.get('__formid__', 'deform')
+        form = self.generate_task_form(formid)
         if 'submit' in self.request.POST:
             return self.process_task_form(form)
         order = self.sort_order()
@@ -302,7 +323,8 @@ class ToDoViews(Layouts):
     @view_config(route_name='tag', renderer='templates/todo_list.pt',
                  permission='view')
     def tag_view(self):
-        form = self.generate_task_form()
+        formid = self.request.params.get('__formid__', 'deform')
+        form = self.generate_task_form(formid)
         if 'submit' in self.request.POST:
             return self.process_task_form(form)
         order = self.sort_order()

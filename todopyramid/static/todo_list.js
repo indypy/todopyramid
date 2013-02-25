@@ -1,5 +1,27 @@
 $(function() {
 
+    // Edit a todo task
+    $("a.todo-edit").click(function(e) {
+        e.preventDefault();
+        var edit_modal = $('#edit-task');
+        var todo_id = $(this).closest('ul').attr('id');
+        // Get the form html via ajax call
+        $.ajax({
+            url: '/edit.task',
+            data: {'id': todo_id}}
+            )
+        .done(function(form_html) {
+            // place the form in the modal
+            edit_modal.find('.modal-body').html(form_html);
+            deform.load();
+            // Show the form to the user
+            edit_modal.modal('show');
+        })
+        .fail(function() {
+            bootbox.alert('There was an error processing your request. Please try again.');
+        });
+    });
+
     // Compete a todo task when the link is clicked
     $("a.todo-complete").click(function(e) {
         e.preventDefault();

@@ -212,6 +212,9 @@ class ToDoViews(Layouts):
         if order == 'due_date':
             # handle sorting of NULL values so they are always at the end
             order = 'CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date'
+        if order == 'task':
+            # Sort ignoring case
+            order += ' COLLATE NOCASE'
         if order_dir:
             order = ' '.join([order, order_dir])
         return order

@@ -111,6 +111,7 @@
 
     <footer class="pagination-centered container">
       <hr/>
+      <p><a href="http://www.sixfeetup.com"><img alt="Six Feet Up, Inc. logo" src="${request.static_url('todopyramid:static/sixfeetup-logo.png')}" /></a></p>
       <p>Created by <a href="http://www.sixfeetup.com">Six Feet Up, Inc.</a> &mdash; Get the code on <a href="https://github.com/indypy/todopyramid#readme">GitHub</a></p>
     </footer>
 

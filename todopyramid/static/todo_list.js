@@ -46,7 +46,7 @@ $(function() {
         var todo_id = $(this).closest('ul').attr('id');
         var task = $(this).closest('tr');
         var task_name = task.children().first().text();
-        var confirm_text = "<p>Confirm completion of <i>" + task_name + "</i></p><p>This action is not reversible and your task will be <b>deleted</b></p>";
+        var confirm_text = "<p>Confirm completion of <b><i>" + task_name + "</i></b></p><p>This action is not reversible and your task will be <b>deleted</b></p>";
         bootbox.confirm(confirm_text, function(complete_item) {
             if (complete_item) {
                 $.getJSON(
@@ -58,9 +58,9 @@ $(function() {
                             task.remove();
                             // Display a confirmation message
                             var flash = $('div.alert.hide').clone();
-                            flash.html(flash.html() + "The item '" + task_name + "' was deleted");
+                            flash.html(flash.html() + "<b><i>" + task_name + "</i></b> was deleted");
                             flash.removeClass('hide');
-                            flash.addClass('alert-success');
+                            flash.addClass('alert-error');
                             $('#flash-messages').append(flash);
                             flash.show();
                             // Change the count on the page

@@ -267,7 +267,7 @@ class ToDoViews(Layouts):
                     action = 'updated'
                     task.id = task_id
                 DBSession.merge(task)
-            msg = "Task '%s' %s successfully" % (task_name, action)
+            msg = "Task <b><i>%s</i></b> %s successfully" % (task_name, action)
             self.request.session.flash(msg, queue='success')
             # Reload the page we were on
             location = self.request.url

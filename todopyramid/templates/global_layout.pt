@@ -80,7 +80,7 @@
             <div class="alert"
                  tal:repeat="message request.session.pop_flash()">
               <button type="button" class="close" data-dismiss="alert">&times;</button>
-              ${message}
+              <tal:alert replace="structure message" />
             </div>
         </tal:message>
         <!--! Flash messages from specific queues -->
@@ -89,7 +89,7 @@
               <div tal:repeat="message request.session.pop_flash(flash_type)"
                    tal:attributes="class string:alert alert-$flash_type">
                 <button type="button" class="close" data-dismiss="alert">&times;</button>
-                ${message}
+                <tal:alert replace="structure message" />
               </div>
           </tal:message>
         </tal:newsflash>

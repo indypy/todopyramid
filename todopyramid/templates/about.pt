@@ -1,6 +1,37 @@
 <metal:master use-macro="view.global_template">
-  <div class="hero-unit" metal:fill-slot="content">
-    <h1>Tis a silly place</h1>
-    <p>This is the about page.</p>
+  <div  metal:fill-slot="content">
+    <h1>About ToDo Pyramid</h1>
+
+    <p>ToDo Pyramid is a test app that was created by Six Feet Up in a few days
+    for the <a href="https://github.com/indypy/web-shootout" target="_blank">IndyPy Web Shootout</a>. We believe that Pyramid is better than
+    Django, Flask, and Bottle due to its flexibility and speed.</p>
+
+    <h1>About Pyramid</h1>
+
+    <p><a href="http://www.pylonsproject.org/projects/pyramid/about" target="_blank">Pyramid</a> is a Python based open source web framework. According to the
+    project's website:</p>
+
+    <blockquote>
+      <p>As a framework, its primary job is to make it easier for a developer
+    to create an arbitrary web application. The type of application being
+    created isn’t really important; it could be a spreadsheet, a corporate
+    intranet, or a social networking platform. Pyramid is general enough
+    that it can be used in a wide variety of circumstances.</p>
+    </blockquote>
+
+    <h1>About Six Feet Up</h1>
+
+    <p>Founded in 1999, Six Feet Up is a privately-held, woman-owned company
+    that develops, hosts and supports open source sophisticated web
+    projects, from enterprise content management and collaborative intranets
+    to mobile apps. While the company has reached a leading position in the
+    Plone market, Six Feet Up also leverages high-profile open source
+    software, such as KARL, Pyramid, Django and Sencha Touch. Six Feet Up's
+    clients include top universities and life sciences organizations,
+    growing and distributed teams, as well as Fortune 500 companies. More
+    information is available at
+    <a href="http://www.sixfeetup.com/">http://www.sixfeetup.com</a></p>
+
+    <p>Contact us today to discuss your next web project: <a href="&#x6D;a&#105;&#108;&#116;o:&#105;&#x6E;&#x66;&#x6F;&#64;s&#105;&#x78;f&#101;&#x65;&#x74;&#x75;p&#46;&#99;&#x6F;m">&#105;&#x6E;&#x66;&#x6F;&#64;s&#105;&#x78;f&#101;&#x65;&#x74;&#x75;p&#46;&#99;&#x6F;m</a></p>
   </div>
 </metal:master>

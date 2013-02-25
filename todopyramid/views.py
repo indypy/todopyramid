@@ -194,7 +194,7 @@ class ToDoViews(Layouts):
             order = ' '.join([order, order_dir])
         return order
 
-    def generate_add_form(self):
+    def generate_task_form(self, formid="deform"):
         schema = TodoSchema().bind(user_tz=self.user.time_zone)
         options = """
         {success:
@@ -211,11 +211,12 @@ class ToDoViews(Layouts):
         return Form(
             schema,
             buttons=('submit',),
+            formid=formid,
             use_ajax=True,
             ajax_options=options,
         )
 
-    def process_add_form(self, form):
+    def process_task_form(self, form):
         try:
             # try to validate the submitted values
             controls = self.request.POST.items()
@@ -259,9 +260,9 @@ class ToDoViews(Layouts):
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')
     def list_view(self):
-        form = self.generate_add_form()
+        form = self.generate_task_form()
         if 'submit' in self.request.POST:
-            return self.process_add_form(form)
+            return self.process_task_form(form)
         order = self.sort_order()
         todo_items = self.user.todo_list.order_by(order).all()
         grid = TodoGrid(
@@ -299,9 +300,9 @@ class ToDoViews(Layouts):
     @view_config(route_name='tag', renderer='templates/todo_list.pt',
                  permission='view')
     def tag_view(self):
-        form = self.generate_add_form()
+        form = self.generate_task_form()
         if 'submit' in self.request.POST:
-            return self.process_add_form(form)
+            return self.process_task_form(form)
         order = self.sort_order()
         qry = self.user.todo_list.order_by(order)
         tag_name = self.request.matchdict['tag_name']

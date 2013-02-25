@@ -41,6 +41,9 @@ class TodoSchema(MappingSchema):
         widget=TagsWidget(
             autocomplete_url='/tags.autocomplete',
         ),
+        description=(
+            "Enter a comma after each tag to add it. Backspace to delete."
+        ),
         missing=[],
     )
     due_date = SchemaNode(

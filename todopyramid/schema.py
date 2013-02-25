@@ -1,8 +1,10 @@
 from colander import MappingSchema
 from colander import SchemaNode
 from colander import String
+from colander import Integer
 from colander import DateTime
 from colander import deferred
+from deform.widget import HiddenWidget
 from deform.widget import SelectWidget
 from deform_bootstrap_extra.widgets import TagsWidget
 from pytz import all_timezones
@@ -28,6 +30,11 @@ def deferred_datetime_node(node, kw):
 
 
 class TodoSchema(MappingSchema):
+    id = SchemaNode(
+        Integer(),
+        missing=None,
+        widget=HiddenWidget(),
+    )
     name = SchemaNode(String())
     tags = SchemaNode(
         String(),

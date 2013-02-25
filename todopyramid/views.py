@@ -221,6 +221,7 @@ class ToDoViews(Layouts):
             # try to validate the submitted values
             controls = self.request.POST.items()
             captured = form.validate(controls)
+            action = 'created'
             with transaction.manager:
                 tags = captured.get('tags', [])
                 if tags:
@@ -236,12 +237,13 @@ class ToDoViews(Layouts):
                     tags=tags,
                     due_date=due_date,
                 )
-                DBSession.add(task)
-            msg = "New task '%s' created successfully" % task_name
-            self.request.session.flash(
-                msg,
-                queue='success',
-            )
+                task_id = captured.get('id')
+                if task_id is not None:
+                    action = 'updated'
+                    task.id = task_id
+                DBSession.merge(task)
+            msg = "Task '%s' %s successfully" % (task_name, action)
+            self.request.session.flash(msg, queue='success')
             # Reload the page we were on
             location = self.request.url
             return Response(

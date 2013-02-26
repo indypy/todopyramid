@@ -8,7 +8,12 @@
     <br/>
 
     <tal:anon condition="anon">
-      <p>Some text about why you would sign up for this todo list</p>
+      <p>Are you ready to <b>G</b>et <b>T</b>hings <b>D</b>one? The ToDo Pyramid app is here to help.</p>
+      <i class="icon-list"></i> Whether you need to create a grocery list<br />
+      <i class="icon-globe"></i> Plan that vacation you always wanted to take<br />
+      <i class="icon-calendar"></i> or add <i>all</i> those little tasks that you always forget, this is the app for you.<br />
+      <br />
+      <p>Click <b><i>Sign In</i></b> at the top right corner to begin your new adventure.</p>
     </tal:anon>
 
     <tal:logged_in condition="not anon">

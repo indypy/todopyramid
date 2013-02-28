@@ -2,6 +2,8 @@
 
 This is the Pyramid app for the Python Web Shootout.
 
+Try it out here: <http://demo.todo.sixfeetup.com>
+
 ## Install
 
 You can follow the instructions in the [Pyramid docs on installation][install].

@@ -106,6 +106,9 @@ class ToDoViews(Layouts):
     @view_config(route_name='account', renderer='templates/account.pt',
                 permission='view')
     def account_view(self):
+        # Special case when the db was blown away
+        if self.user_id is not None and self.user is None:
+            return self.logout()
         section_name = 'account'
         schema = SettingsSchema()
         form = Form(schema, buttons=('submit',))
@@ -200,6 +203,9 @@ class ToDoViews(Layouts):
 
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(self):
+        # Special case when the db was blown away
+        if self.user_id is not None and self.user is None:
+            return self.logout()
         if self.user_id is None:
             count = None
         else:
@@ -287,6 +293,9 @@ class ToDoViews(Layouts):
     @view_config(route_name='list', renderer='templates/todo_list.pt',
                 permission='view')
     def list_view(self):
+        # Special case when the db was blown away
+        if self.user_id is not None and self.user is None:
+            return self.logout()
         form = self.generate_task_form()
         if 'submit' in self.request.POST:
             return self.process_task_form(form)
@@ -317,6 +326,9 @@ class ToDoViews(Layouts):
     @view_config(route_name='tags', renderer='templates/todo_tags.pt',
                 permission='view')
     def tags_view(self):
+        # Special case when the db was blown away
+        if self.user_id is not None and self.user is None:
+            return self.logout()
         tags = self.user.user_tags
         return {
             'section': 'tags',
@@ -327,6 +339,9 @@ class ToDoViews(Layouts):
     @view_config(route_name='tag', renderer='templates/todo_list.pt',
                  permission='view')
     def tag_view(self):
+        # Special case when the db was blown away
+        if self.user_id is not None and self.user is None:
+            return self.logout()
         form = self.generate_task_form()
         if 'submit' in self.request.POST:
             return self.process_task_form(form)

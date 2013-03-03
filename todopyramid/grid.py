@@ -94,6 +94,8 @@ class TodoGrid(ObjectGrid):
         return HTML(*records)
 
     def tags_td(self, col_num, i, item):
+        """Generate the column for the tags.
+        """
         tag_links = []
 
         for tag in item.sorted_tags:
@@ -109,6 +111,8 @@ class TodoGrid(ObjectGrid):
         return HTML.td(*tag_links, _nl=True)
 
     def due_date_td(self, col_num, i, item):
+        """Generate the column for the due date.
+        """
         if item.due_date is None:
             return HTML.td('')
         span_class = 'due-date badge'
@@ -123,6 +127,8 @@ class TodoGrid(ObjectGrid):
         return HTML.td(span)
 
     def action_td(self, col_num, i, item):
+        """Generate the column that has the actions in it.
+        """
         return HTML.td(HTML.literal("""\
         <div class="btn-group">
           <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">

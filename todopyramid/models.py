@@ -27,6 +27,10 @@ todoitemtag_table = Table(
 
 
 class RootFactory(object):
+    """This object sets the security for our application. In this case
+    we are only setting the `view` permission for all authenticated
+    users.
+    """
     __acl__ = [(Allow, Authenticated, 'view')]
 
     def __init__(self, request):
@@ -34,6 +38,8 @@ class RootFactory(object):
 
 
 class Tag(Base):
+    """The Tag model is a many to many relationship to the TodoItem.
+    """
     __tablename__ = 'tags'
     name = Column(Text, primary_key=True)
     todoitem_id = Column(Integer, ForeignKey('todoitems.id'))
@@ -43,6 +49,9 @@ class Tag(Base):
 
 
 class TodoItem(Base):
+    """This is the main model in our application. This is what powers
+    the tasks in the todo list.
+    """
     __tablename__ = 'todoitems'
     id = Column(Integer, primary_key=True)
     task = Column(Text, nullable=False)
@@ -58,20 +67,33 @@ class TodoItem(Base):
             self.apply_tags(tags)
 
     def apply_tags(self, tags):
+        """This helper function merely takes a list of tags and
+        creates the associated tag object. We strip off whitespace
+        and lowercase the tags to keep a normalized list.
+        """
         for tag_name in tags:
             tag = tag_name.strip().lower()
             self.tags.append(DBSession.merge(Tag(tag)))
 
     @property
     def sorted_tags(self):
+        """Return a list of sorted tags for this task.
+        """
         return sorted(self.tags, key=lambda x: x.name)
 
     @property
     def past_due(self):
+        """Determine if this task is past its due date. Notice that we
+        compare to `utcnow` since dates are stored in UTC.
+        """
         return self.due_date and self.due_date < datetime.utcnow()
 
 
 class TodoUser(Base):
+    """When a user signs in with their persona, this model is what
+    stores their account information. It has a one to many relationship
+    with the `TodoItem` model to create the `todo_list`.
+    """
     __tablename__ = 'users'
     email = Column(Text, primary_key=True)
     first_name = Column(Text)
@@ -98,4 +120,8 @@ class TodoUser(Base):
 
     @property
     def profile_complete(self):
+        """A check to see if the user has completed their profile. If
+        they have not, in the view code, we take them to their account
+        settings.
+        """
         return self.first_name and self.last_name

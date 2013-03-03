@@ -4,19 +4,6 @@ from webhelpers.html.grid import ObjectGrid
 from .utils import localize_datetime
 
 
-def pretty_date(item_date):
-    """Shoehorn the moment.js code into the template. Based on this
-    blog: http://blog.miguelgrinberg.com/
-
-    XXX: remove this and do it via jQuery
-    """
-    fmt_date = item_date.strftime('%Y-%m-%d %H:%M')
-    return """
-<script>
-  document.write(moment("%s", "YYYY-MM-DD HH:mm").calendar());
-</script>""" % fmt_date
-
-
 class TodoGrid(ObjectGrid):
     """A generated table for the todo list that supports ordering of
     the task name and due date columns. We also customize the init so
@@ -124,13 +111,15 @@ class TodoGrid(ObjectGrid):
     def due_date_td(self, col_num, i, item):
         if item.due_date is None:
             return HTML.td('')
-        span_class = 'badge'
+        span_class = 'due-date badge'
         if item.past_due:
             span_class += ' badge-important'
         due_date = localize_datetime(item.due_date, self.user_tz)
-        span = HTML.tag("span",
-                        c=HTML.literal(pretty_date(due_date)),
-                        class_=span_class)
+        span = HTML.tag(
+            "span",
+            c=HTML.literal(due_date.strftime('%Y-%m-%d %H:%M:%S')),
+            class_=span_class,
+        )
         return HTML.td(span)
 
     def action_td(self, col_num, i, item):

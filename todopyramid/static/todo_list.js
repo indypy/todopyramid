@@ -1,5 +1,12 @@
 $(function() {
 
+    // Show the fancy version of the due date
+    $('.due-date').each(function() {
+        var due_date = $(this).text();
+        var human_date = moment(due_date, "YYYY-MM-DD HH:mm:ss").calendar();
+        $(this).text(human_date);
+    });
+
     // Edit a task when the edit link is clicked in the actions dropdown
     $("a.todo-edit").click(function(e) {
         e.preventDefault();

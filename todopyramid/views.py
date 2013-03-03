@@ -12,7 +12,6 @@ from deform import Form
 from deform import ValidationFailure
 from peppercorn import parse
 from pyramid_persona.views import verify_login
-from sqlalchemy.exc import DBAPIError
 import transaction
 
 from .grid import TodoGrid
@@ -37,14 +36,8 @@ class ToDoViews(Layouts):
         self.todo_list = []
         self.user = None
         if self.user_id is not None:
-            try:
-                self.user = DBSession.query(TodoUser).filter(
-                    TodoUser.email == self.user_id).first()
-            except DBAPIError:
-                # We'll add this DB error exception here to let people
-                # know they need to run the script
-                return Response(
-                    conn_err_msg, content_type='text/plain', status_int=500)
+            query = DBSession.query(TodoUser)
+            self.user = query.filter(TodoUser.email == self.user_id).first()
 
     def form_resources(self, form):
         resources = form.get_widget_resources()
@@ -372,20 +365,3 @@ class ToDoViews(Layouts):
             'css_resources': css_resources,
             'js_resources': js_resources,
         }
-
-
-conn_err_msg = """\
-Pyramid is having a problem using your SQL database.  The problem
-might be caused by one of the following things:
-
-1.  You may need to run the "initialize_todopyramid_db" script
-    to initialize your database tables.  Check your virtual
-    environment's "bin" directory for this script and try to run it.
-
-2.  Your database server may not be running.  Check that the
-    database server referred to by the "sqlalchemy.url" setting in
-    your "development.ini" file is running.
-
-After you fix the problem, please restart the Pyramid application to
-try it again.
-"""

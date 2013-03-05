@@ -12,6 +12,8 @@ from pytz import timezone
 
 
 class SettingsSchema(MappingSchema):
+    """This is the form schema used for the account view.
+    """
     first_name = SchemaNode(String())
     last_name = SchemaNode(String())
     time_zone = SchemaNode(
@@ -25,11 +27,18 @@ class SettingsSchema(MappingSchema):
 
 @deferred
 def deferred_datetime_node(node, kw):
+    """We defer the creation of the datetime node so that we can get
+    the timezone from the user's profile. See the generate_task_form
+    method in views.py to see how this is bound together.
+    """
     tz = timezone(kw['user_tz'])
     return DateTime(default_tzinfo=tz)
 
 
 class TodoSchema(MappingSchema):
+    """This is the form schema used for list_view and tag_view. This is
+    the basis for the add and edit form for tasks.
+    """
     id = SchemaNode(
         Integer(),
         missing=None,

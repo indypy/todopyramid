@@ -27,10 +27,16 @@ This creates the new virtual environment, now you can install the app.
 (todopyramid)$ pip install -r requirements.txt -e .
 ```
 
-This gives us the end result of the finished app. It can now be started up by doing the following.
+This gives us the end result of the finished app. If it is the first time you are running the app, you will need to initialize the database.
 
 ```
-(todopyramid)$ pserve production.ini
+(todopyramid)$ initialize_todopyramid_db development.ini
+```
+
+It can now be started up by doing the following.
+
+```
+(todopyramid)$ pserve development.ini
 ```
 
 Now go to <http://localhost:6543> and enjoy!

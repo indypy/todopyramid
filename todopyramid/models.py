@@ -18,12 +18,7 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-todoitemtag_table = Table(
-    'todoitemtag',
-    Base.metadata,
-    Column('tag_id', Integer, ForeignKey('tags.name')),
-    Column('todo_id', Integer, ForeignKey('todoitems.id')),
-)
+
 
 
 class RootFactory(object):
@@ -36,16 +31,12 @@ class RootFactory(object):
     def __init__(self, request):
         pass
 
-
-class Tag(Base):
-    """The Tag model is a many to many relationship to the TodoItem.
-    """
-    __tablename__ = 'tags'
-    name = Column(Text, primary_key=True)
-    todoitem_id = Column(Integer, ForeignKey('todoitems.id'))
-
-    def __init__(self, name):
-        self.name = name
+todoitemtag_table = Table(
+    'todoitemtags',
+    Base.metadata,
+    Column('tag_name', Integer, ForeignKey('tags.name')),
+    Column('todo_id', Integer, ForeignKey('todoitems.id')),
+)
 
 
 class TodoItem(Base):
@@ -56,8 +47,10 @@ class TodoItem(Base):
     id = Column(Integer, primary_key=True)
     task = Column(Text, nullable=False)
     due_date = Column(DateTime)
-    user = Column(Integer, ForeignKey('users.email'), nullable=False)
-    tags = relationship(Tag, secondary=todoitemtag_table, lazy='dynamic')
+    user = Column(Integer, ForeignKey('users.email'))
+    
+    # # many to many TodoItem<->Tag
+    tags = relationship("Tag", secondary=todoitemtag_table, backref="todos")
 
     def __init__(self, user, task, tags=None, due_date=None):
         self.user = user
@@ -71,13 +64,36 @@ class TodoItem(Base):
         creates the associated tag object. We strip off whitespace
         and lowercase the tags to keep a normalized list.
         """
+
         for tag_name in tags:
-            tag = tag_name.strip().lower()
-            self.tags.append(DBSession.merge(Tag(tag)))
+            tag_name = self.sanitize_tag(tag_name)
+            tag = self._find_or_create_tag(tag_name)
+            self.tags.append(tag)
+            
+    def sanitize_tag(self, tag_name):
+        """tag name input validation"""
+        tag = tag_name.strip().lower()
+        return tag    
+
+    def _find_or_create_tag(self, tag_name):
+        """ensure tag names are unique
+        
+        http://stackoverflow.com/questions/2310153/inserting-data-in-many-to-many-relationship-in-sqlalchemy
+        
+        why we need that - prevent multiple tags  
+        http://stackoverflow.com/questions/13149829/many-to-many-in-sqlalchemy-preventing-sqlalchemy-from-inserting-into-a-table-if
+        """
+        q = DBSession.query(Tag).filter_by(name=tag_name)
+        t = q.first()
+        if not(t):
+            t = Tag(tag_name)
+        return t
 
     @property
     def sorted_tags(self):
         """Return a list of sorted tags for this task.
+        
+        TODO: we can apply sorting using the relationship 
         """
         return sorted(self.tags, key=lambda x: x.name)
 
@@ -87,6 +103,23 @@ class TodoItem(Base):
         compare to `utcnow` since dates are stored in UTC.
         """
         return self.due_date and self.due_date < datetime.utcnow()
+
+
+class Tag(Base):
+    """The Tag model is a many to many relationship to the TodoItem.
+    
+    http://docs.sqlalchemy.org/en/rel_0_9/orm/tutorial.html#building-a-many-to-many-relationship
+    """
+    __tablename__ = 'tags'
+
+    #id = Column(Integer, primary_key=True)
+    #name = Column(Text, nullable=False, unique=True)
+
+    name = Column(Text, primary_key=True)
+
+
+    def __init__(self, name):
+        self.name = name
 
 
 class TodoUser(Base):
@@ -111,11 +144,14 @@ class TodoUser(Base):
     @property
     def user_tags(self):
         """Find all tags a user has created
+        
+        TODO: This can not be answered by the model
+        I could not find a concept of user created tags       
+        Currently we create user-related todoitems linking to tags that could have been created by other users   
         """
-        qry = self.todo_list.session.query(todoitemtag_table.columns['tag_id'])
+        qry = self.todo_list.session.query(todoitemtag_table.columns['tag_name'])
         qry = qry.join(TodoItem).filter_by(user=self.email)
-        qry = qry.group_by('tag_id')
-        qry = qry.order_by('tag_id')
+        #qry = qry.group_by('tag_name')
         return qry.all()
 
     @property

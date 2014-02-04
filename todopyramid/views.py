@@ -275,6 +275,8 @@ class ToDoViews(Layouts):
     def tag_autocomplete(self):
         """Get a list of dictionaries for the given term. This gives
         the tag input the information it needs to do auto completion.
+        
+        TODO: improve model to support user_tags 
         """
         term = self.request.params.get('term', '')
         if len(term) < 2:

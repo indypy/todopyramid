@@ -26,58 +26,69 @@ def usage(argv):
     sys.exit(1)
 
 
-def create_dummy_content(user_id):
+def create_dummy_content():
     """Create some tasks by default to show off the site
     """
-    task = TodoItem(
-        user=user_id,
-        task=u'Find a shrubbery',
-        tags=[u'quest', u'ni', u'knight'],
-        due_date=datetime.utcnow() + timedelta(days=60),
-    )
-    DBSession.add(task)
-    task = TodoItem(
-        user=user_id,
-        task=u'Search for the holy grail',
-        tags=[u'quest'],
-        due_date=datetime.utcnow() - timedelta(days=1),
-    )
-    DBSession.add(task)
-    task = TodoItem(
-        user=user_id,
-        task=u'Recruit Knights of the Round Table',
-        tags=[u'quest', u'knight', u'discuss'],
-        due_date=datetime.utcnow() + timedelta(minutes=45),
-    )
-    DBSession.add(task)
-    task = TodoItem(
-        user=user_id,
-        task=u'Build a Trojan Rabbit',
-        tags=[u'quest', u'rabbit'],
-        due_date=datetime.utcnow() + timedelta(days=1),
-    )
-    DBSession.add(task)
-    task = TodoItem(
-        user=user_id,
-        task=u'Talk to Tim the Enchanter',
-        tags=[u'quest', u'discuss'],
-        due_date=datetime.utcnow() + timedelta(days=90),
-    )
-    DBSession.add(task)
-    task = TodoItem(
-        user=user_id,
-        task=u'Defeat the Rabbit of Caerbannog',
-        tags=[u'quest', u'rabbit'],
-        due_date=None,
-    )
-    DBSession.add(task)
-    task = TodoItem(
-        user=user_id,
-        task=u'Cross the Bridge of Death',
-        tags=[u'quest'],
-        due_date=None,
-    )
-    DBSession.add(task)
+    with transaction.manager:
+
+        user = TodoUser(
+            email=u'king.arthur@example.com',
+            first_name=u'Arthur',
+            last_name=u'Pendragon',
+        )
+        DBSession.add(user)
+    
+    
+        user_id = user.email    
+        task = TodoItem(
+            user=user_id,
+            task=u'Find a shrubbery',
+            tags=[u'quest', u'ni', u'knight'],
+            due_date=datetime.utcnow() + timedelta(days=60),
+        )
+        DBSession.add(task)
+        task = TodoItem(
+            user=user_id,
+            task=u'Search for the holy grail',
+            tags=[u'quest'],
+            due_date=datetime.utcnow() - timedelta(days=1),
+        )
+        DBSession.add(task)
+        task = TodoItem(
+            user=user_id,
+            task=u'Recruit Knights of the Round Table',
+            tags=[u'quest', u'knight', u'discuss'],
+            due_date=datetime.utcnow() + timedelta(minutes=45),
+        )
+        DBSession.add(task)
+        task = TodoItem(
+            user=user_id,
+            task=u'Build a Trojan Rabbit',
+            tags=[u'quest', u'rabbit'],
+            due_date=datetime.utcnow() + timedelta(days=1),
+        )
+        DBSession.add(task)
+        task = TodoItem(
+            user=user_id,
+            task=u'Talk to Tim the Enchanter',
+            tags=[u'quest', u'discuss'],
+            due_date=datetime.utcnow() + timedelta(days=90),
+        )
+        DBSession.add(task)
+        task = TodoItem(
+            user=user_id,
+            task=u'Defeat the Rabbit of Caerbannog',
+            tags=[u'quest', u'rabbit'],
+            due_date=None,
+        )
+        DBSession.add(task)
+        task = TodoItem(
+            user=user_id,
+            task=u'Cross the Bridge of Death',
+            tags=[u'quest'],
+            due_date=None,
+        )
+        DBSession.add(task)
 
 
 def main(argv=sys.argv):
@@ -89,11 +100,6 @@ def main(argv=sys.argv):
     engine = engine_from_config(settings, 'sqlalchemy.')
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
-    with transaction.manager:
-        user = TodoUser(
-            email=u'king.arthur@example.com',
-            first_name=u'Arthur',
-            last_name=u'Pendragon',
-        )
-        DBSession.add(user)
-        create_dummy_content(u'king.arthur@example.com')
+    create_dummy_content()
+
+        

@@ -207,9 +207,9 @@ from .layouts import Layouts
 
 class ToDoViews(Layouts):
 
-    def __init__(self, context, request):
-        self.context = context
+    def __init__(self, request):
         self.request = request
+        self.context = request.context
 
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(request):
@@ -220,7 +220,7 @@ class ToDoViews(Layouts):
 Now we can add a `todopyramid/templates/home.pt` to our app with the following
 
 ```
-<metal: master use-macro="view.global_template">
+<metal:master use-macro="view.global_template">
   <div metal:fill-slot="content">
     <h1>Home</h1>
     <p>Welcome to the Pyramid version of the ToDo app.</p>

@@ -7,18 +7,19 @@ README = open(os.path.join(here, 'README.md')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
-    'pyramid',
+    'pyramid==1.4.3',
     'SQLAlchemy',
-    'transaction',
     'pyramid_tm',
     'pyramid_debugtoolbar',
     'zope.sqlalchemy',
     'waitress',
-    'deform_bootstrap',
-    'deform_bootstrap_extra',
+    'deform<=1.999',
+    'deform_bootstrap==0.2.8',
+    'deform_bootstrap_extra==0.2.8',
     'pyramid_persona',
     'WebHelpers',
     'pytz',
+    'requests==1.1.0'
 ]
 
 setup(

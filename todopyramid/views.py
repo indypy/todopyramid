@@ -32,10 +32,9 @@ class ToDoViews(Layouts):
     base class has the master template set up.
     """
 
-    def __init__(self, context, request):
+    def __init__(self, request):
         """Set some common variables needed for each view.
         """
-        self.context = context
         self.request = request
         self.user_id = authenticated_userid(request)
         self.todo_list = []

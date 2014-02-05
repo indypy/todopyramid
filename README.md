@@ -253,6 +253,38 @@ We will create a `TodoItem` and `Tag` model to start out with. This will give us
 
 
 
+### Explore model with IPython
+
+```
+$ bin/pshell production.ini
+Adding asdict2() to Colander.
+Python 2.7.2+ (default, Jul 20 2012, 22:12:53) 
+Type "copyright", "credits" or "license" for more information.
+
+IPython 0.13.1 -- An enhanced Interactive Python.
+?         -> Introduction and overview of IPython's features.
+%quickref -> Quick reference.
+help      -> Python's own help system.
+object?   -> Details about 'object', use 'object??' for extra details.
+
+Environment:
+  app          The WSGI application.
+  registry     Active Pyramid registry.
+  request      Active request object.
+  root         Root of the default resource tree.
+  root_factory Default root factory used to create `root`.
+
+In [1]: from todopyramid.models import DBSession, TodoUser
+
+In [2]: user = DBSession.query(TodoUser).filter_by(first_name='Arthur').one()
+
+In [3]: user
+Out[3]: <todopyramid.models.TodoUser at 0xa73cb8c>
+
+In [4]: user.email
+Out[4]: u'king.arthur@example.com'
+```
+
 
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html
 [deform]: http://docs.pylonsproject.org/projects/deform/en/latest/

@@ -46,6 +46,9 @@ class ToDoViews(Layouts):
     def form_resources(self, form):
         """Get a list of css and javascript resources for a given form.
         These are then used to place the resources in the global layout.
+        
+        TODO: may be use static_url API here
+        TODO: @reify is another option
         """
         resources = form.get_widget_resources()
         js_resources = resources['js']
@@ -116,17 +119,21 @@ class ToDoViews(Layouts):
                     # Convert back to UTC for storage
                     due_date = universify_datetime(due_date)
                 task_name = captured.get('name')
-                task = TodoItem(
+                todo = TodoItem(
                     user=self.user_id,
                     task=task_name,
                     tags=tags,
                     due_date=due_date,
                 )
-                task_id = captured.get('id')
-                if task_id is not None:
+                todo_id = captured.get('id')
+                if todo_id is not None:
                     action = 'updated'
-                    task.id = task_id
-                DBSession.merge(task)
+                    todo = DBSession.query(TodoItem).filter_by(id=todo_id).one()
+                    todo.task = task_name
+                    todo.apply_tags(tags)
+                    todo.due_date = due_date
+                    
+                DBSession.add(todo)
             msg = "Task <b><i>%s</i></b> %s successfully" % (task_name, action)
             self.request.session.flash(msg, queue='success')
             # Reload the page we were on
@@ -276,13 +283,13 @@ class ToDoViews(Layouts):
         """Get a list of dictionaries for the given term. This gives
         the tag input the information it needs to do auto completion.
         
-        TODO: improve model to support user_tags 
+        TODO: improve model to support user_tags - done
         """
         term = self.request.params.get('term', '')
         if len(term) < 2:
             return []
-        # XXX: This is global tags, need to hook into "user_tags"
-        tags = DBSession.query(Tag).filter(Tag.name.startswith(term)).all()
+        
+        tags = self.user.user_tags_autocomplete(term)
         return [
             dict(id=tag.name, value=tag.name, label=tag.name)
             for tag in tags
@@ -313,14 +320,11 @@ class ToDoViews(Layouts):
     def delete_task(self):
         """Delete a todo list item
 
-        TODO: Add a guard here so that you can only delete your tasks
+        TODO: Add a guard here so that you can only delete your tasks - done
         """
         todo_id = self.request.params.get('id', None)
         if todo_id is not None:
-            todo_item = DBSession.query(TodoItem).filter(
-                TodoItem.id == todo_id)
-            with transaction.manager:
-                todo_item.delete()
+            self.user.delete_todo(todo_id)
         return True
 
     @view_config(route_name='home', renderer='templates/home.pt')
@@ -339,7 +343,7 @@ class ToDoViews(Layouts):
         if self.user_id is None:
             count = None
         else:
-            count = len(self.user.todo_list.all())
+            count = self.user.todo_list.count()
         return {'user': self.user, 'count': count, 'section': 'home'}
 
     @view_config(route_name='list', renderer='templates/todo_list.pt',
@@ -355,8 +359,8 @@ class ToDoViews(Layouts):
         form = self.generate_task_form()
         if 'submit' in self.request.POST:
             return self.process_task_form(form)
-        order = self.sort_order()
-        todo_items = self.user.todo_list.order_by(order).all()
+
+        todo_items = self.get_ordered_todos()
         grid = TodoGrid(
             self.request,
             None,
@@ -379,10 +383,17 @@ class ToDoViews(Layouts):
             'js_resources': js_resources,
         }
 
+    def get_ordered_todos(self):
+        """future TodoView method"""  
+        order = self.sort_order()
+        return self.user.todo_list.order_by(order).all()
+
     @view_config(route_name='tags', renderer='templates/todo_tags.pt',
                 permission='view')
     def tags_view(self):
         """This view simply shows all of the tags a user has created.
+        
+        TODO: use request.route_url API to generate URLs in view code
         """
         # Special case when the db was blown away
         if self.user_id is not None and self.user is None:
@@ -400,6 +411,10 @@ class ToDoViews(Layouts):
         """Very similar to the list_view, this view just filters the
         list of tags down to the tag selected in the url based on the
         tag route replacement marker that ends up in the `matchdict`.
+        
+        Actually we can create tasks from this page as well.
+        That is why 'Add Task' form can submit to this view as well. 
+         
         """
         # Special case when the db was blown away
         if self.user_id is not None and self.user is None:
@@ -407,12 +422,18 @@ class ToDoViews(Layouts):
         form = self.generate_task_form()
         if 'submit' in self.request.POST:
             return self.process_task_form(form)
+
+        #get params from request        
         order = self.sort_order()
-        qry = self.user.todo_list.order_by(order)
         tag_name = self.request.matchdict['tag_name']
+        
+        #refactor: encapsulate it somewhere  
+        qry = self.user.todo_list.order_by(order)
         tag_filter = TodoItem.tags.any(Tag.name.in_([tag_name]))
         todo_items = qry.filter(tag_filter)
         count = todo_items.count()
+        
+        
         item_label = 'items' if count > 1 or count == 0 else 'item'
         grid = TodoGrid(
             self.request,

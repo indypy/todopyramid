@@ -248,6 +248,12 @@ Now that we have created the shell for our app, it is time to create some models
 
 We will create a `TodoItem` and `Tag` model to start out with. This will give us the basis for our todo list.
 
+
+### Model Relationships
+
+
+
+
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html
 [deform]: http://docs.pylonsproject.org/projects/deform/en/latest/
 [deform_bootstrap]: http://pypi.python.org/pypi/deform_bootstrap

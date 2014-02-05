@@ -132,6 +132,7 @@ class TodoUser(Base):
     first_name = Column(Text)
     last_name = Column(Text)
     time_zone = Column(Text)
+    todos = relationship(TodoItem)
     todo_list = relationship(TodoItem, lazy='dynamic')
 
     def __init__(self, email, first_name=None, last_name=None,
@@ -145,15 +146,41 @@ class TodoUser(Base):
     def user_tags(self):
         """Find all tags a user has created
         
-        TODO: This can not be answered by the model
-        I could not find a concept of user created tags       
-        Currently we create user-related todoitems linking to tags that could have been created by other users   
+        returns KeyedTuples with key 'tag_name' 
+        TODO: refactor to return collection of Tag model - consider lazy
+        
+        explore code samples - we also have user/author model and a many-to-many relationship between todo and tag
+        http://docs.sqlalchemy.org/en/rel_0_9/orm/tutorial.html#building-a-many-to-many-relationship         
         """
         qry = self.todo_list.session.query(todoitemtag_table.columns['tag_name'])
         qry = qry.join(TodoItem).filter_by(user=self.email)
-        #qry = qry.group_by('tag_name')
+        qry = qry.group_by('tag_name')
+        qry = qry.order_by('tag_name')
         return qry.all()
 
+    def user_tags_autocomplete(self, term):
+        """given a term return a unique collection (set) of user tags that start with it
+        
+        
+        In [19]: for todo in user.todos:
+            for tag in todo.tags:
+                if tag.name.startswith('ber'):
+           ....:             print tag.name
+           ....:             
+        berlin
+        berlin
+        berlin
+        berlin
+        """
+        matching_tags = set()
+        for todo in self.todos:
+            for tag in todo.tags:
+                if tag.name.startswith(term):
+                    matching_tags.add(tag)
+        
+        return matching_tags
+        
+        
     @property
     def profile_complete(self):
         """A check to see if the user has completed their profile. If
@@ -161,3 +188,15 @@ class TodoUser(Base):
         settings.
         """
         return self.first_name and self.last_name
+    
+    def delete_todo(self, todo_id):
+        """given a todo ID we delete it is contained in user todos 
+        
+        there is another way to remove an item from a collection
+        http://stackoverflow.com/questions/10378468/deleting-an-object-from-collection-in-sqlalchemy"""
+        todo_item = self.todo_list.filter(
+                TodoItem.id == todo_id)
+
+        todo_item.delete()
+    
+    

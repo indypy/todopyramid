@@ -36,10 +36,10 @@ def create_dummy_content():
             first_name=u'Arthur',
             last_name=u'Pendragon',
         )
-        DBSession.add(user)
-    
-    
-        user_id = user.email    
+        DBSession.add(user)  
+        user_id = user.email 
+        
+        #this user creates several todo items   
         task = TodoItem(
             user=user_id,
             task=u'Find a shrubbery',

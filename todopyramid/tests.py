@@ -76,13 +76,80 @@ class UserModelTests(ModelTests):
         self.assertTrue(instance.profile_complete)
 
 
-    def test_given_a_new_user_when_I_ask_for_tags_then_I_get_an_empty_list(self):
+    def test_given_a_new_user_when_I_ask_for_user_tags_then_I_get_an_empty_list(self):
         instance = self._makeOne(u'king.arthur@example.com',
                          u'Arthur',
                          u'Pendragon')
         self.session.add(instance)
         tags = instance.user_tags
         self.assertEqual(tags, [])
+        
+        
+    def test_given_a_new_user_when_I_ask_for_todos_Then_I_get_back_an_empty_list(self):
+        user = self._makeOne(u'king.arthur@example.com',
+                         u'Arthur',
+                         u'Pendragon')
+        self.session.add(user)
+        todos = user.todos
+        self.assertEqual(todos, [])    
+        
+    def test_given_a_user_when_I_add_a_todo_Then_I_can_access_from_user(self):
+        """test user model method to delete a single todo"""
+        from .models import Tag
+        from .models import TodoUser
+        from .models import TodoItem
+
+        user = TodoUser(
+                email=u'king.arthur@example.com',
+                first_name=u'Arthur',
+                last_name=u'Pendragon',
+        )
+        self.session.add(user)
+
+        tags = [u'quest', u'ni', u'knight']
+
+        todo = TodoItem(user.email,
+                                 u'Find a shrubbery',   
+                                 [u'quest', u'ni', u'knight']                             
+                                 ) 
+        self.session.add(todo)
+        
+        user_todo = user.todo_list.one()
+        self.assertTrue(todo is user_todo)
+                     
+                     
+    def test_given_a_user_has_a_todo_When_I_delete_it__Then_it_is_gone(self):
+        """test user model method to delete a single todo"""
+        from .models import Tag
+        from .models import TodoUser
+        from .models import TodoItem
+
+        user = TodoUser(
+                email=u'king.arthur@example.com',
+                first_name=u'Arthur',
+                last_name=u'Pendragon',
+        )
+        self.session.add(user)
+
+        tags = [u'quest', u'ni', u'knight']
+
+        todo = TodoItem(user.email,
+                                 u'Find a shrubbery',   
+                                 [u'quest', u'ni', u'knight']                             
+                                 ) 
+        self.session.add(todo)
+        
+        #after inserting we have 1 todo
+        user_todos = user.todo_list.count()
+        self.assertEqual(user_todos, 1) 
+        
+        #after delete we have zero todos 
+        user.delete_todo(todo.id)
+        user_todos = user.todo_list.count()     
+        self.assertEqual(user_todos, 0)               
+
+        
+
         
 class TodoItemModelTests(ModelTests):
       
@@ -102,6 +169,7 @@ class TodoItemModelTests(ModelTests):
         self.assertEqual(instance.tags, [])
         
     def test_given_that_I_add_a_user_and_insert_a_task_with_several_tags_I_can_access_tag_collection(self):
+        """tests model backref todoitem.tags"""
         from .models import Tag
         instance = self._makeOne(1,
                                  u'Find a shrubbery',
@@ -110,7 +178,8 @@ class TodoItemModelTests(ModelTests):
         self.assertEqual(instance.tags[1].name, u'ni')
         self.assertEqual(instance.tags[2].name, u'knight')
         
-    def test_tag_todos(self):
+    def test_tag_relationship_todos(self):
+        """test model backref tag.todos""" 
         from .models import Tag
         instance = self._makeOne(1,
                                  u'Find a shrubbery',
@@ -127,12 +196,9 @@ class TodoItemModelTests(ModelTests):
         instance = self._makeOne(1,
                                  u'Find a shrubbery',
                                  [u'quest', u'ni', u'knight']
-                                 )
-
-        
+                                 )        
         self.session.add(instance)
     
-
         instance = self._makeOne(1,
                                  u'Find another shrubbery',
                                  [u'quest', u'ni', u'knight']
@@ -143,8 +209,30 @@ class TodoItemModelTests(ModelTests):
         todos = self.session.query(TodoItem).count()
         self.assertEqual(todos, 2)
         
-        tag = self.session.query(Tag).filter(Tag.name == u'quest').one()
+        
+        
+        
+    def test_inserting_2_todoitems_with_same_tags_when_I_ask_for_tag_todos_then_I_get_2(self):
+        from .models import Tag
+        from .models import TodoItem
+
+        instance = self._makeOne(1,
+                                 u'Find a shrubbery',
+                                 [u'quest', u'ni', u'knight']
+                                 )        
+        self.session.add(instance)
+    
+        instance = self._makeOne(1,
+                                 u'Find another shrubbery',
+                                 [u'quest', u'ni', u'knight']
+                                 )
+
+        self.session.add(instance)
+        
+        #tag is referenced by 2 todo items
+        tag = self.session.query(Tag).filter(Tag.name == u'quest').one()                
         self.assertEqual(tag.name, u'quest')
+        self.assertEqual(len(tag.todos), 2)
 
     @unittest.skip('skip because it raises IntegrityError')        
     def test_inserting_multiple_todoitems_with_same_tags_using_addall_keep_tags_unique(self):
@@ -179,6 +267,32 @@ class TestHomeView(unittest.TestCase):
         self.assertEqual(response['count'], None)
         self.assertEqual(response['section'], 'home')
         
+class TestTagsView(ModelTests):
+    
+    def test_user_tags(self):
+        """user model property"""
+        from .models import Tag
+        from .models import TodoUser
+        from .models import TodoItem
+
+        user = TodoUser(
+                email=u'king.arthur@example.com',
+                first_name=u'Arthur',
+                last_name=u'Pendragon',
+        )
+        self.session.add(user)
+
+        tags = [u'quest', u'ni', u'knight']
+
+        todo = TodoItem(user.email,
+                                 u'Find a shrubbery',   
+                                 [u'quest', u'ni', u'knight']                             
+                                 )   
+
+        self.session.add(todo)
+        user_tags = user.user_tags
+        for user_tag in user_tags:
+            self.assertIn(user_tag.tag_name, tags, '%s should be one of these tags %s' % (user_tag, tags))
 
         
 

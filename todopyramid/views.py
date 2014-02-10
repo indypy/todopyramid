@@ -296,6 +296,8 @@ class ToDoViews(Layouts):
     @view_config(renderer='json', name='edit.task', permission='view')
     def edit_task(self):
         """Get the values to fill in the edit form
+        
+        TODO: encapsulate datetime localization into model
         """
         todo_id = self.request.params.get('id', None)
         if todo_id is None:

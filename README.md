@@ -251,7 +251,7 @@ We will create a `TodoItem` and `Tag` model to start out with. This will give us
 
 ### Model Relationships
 
-
+Add notes about model relationships that support features offered by todopyramid.
 
 ### Explore model with IPython
 
@@ -284,6 +284,10 @@ Out[3]: <todopyramid.models.TodoUser at 0xa73cb8c>
 In [4]: user.email
 Out[4]: u'king.arthur@example.com'
 ```
+
+### Sorting
+
+TodoGrid can be ordered by task name & due date - ascending and descending.  
 
 
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html

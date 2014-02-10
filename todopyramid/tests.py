@@ -93,7 +93,7 @@ class UserModelTests(ModelTests):
         todos = user.todos
         self.assertEqual(todos, [])    
         
-    def test_given_a_user_when_I_add_a_todo_Then_I_can_access_from_user(self):
+    def test_given_a_user_when_I_add_a_todo_Then_I_can_access_it_from_user_todo_collection(self):
         """test user model method to delete a single todo"""
         from .models import Tag
         from .models import TodoUser
@@ -118,7 +118,7 @@ class UserModelTests(ModelTests):
         self.assertTrue(todo is user_todo)
                      
                      
-    def test_given_a_user_has_a_todo_When_I_delete_it__Then_it_is_gone(self):
+    def test_given_a_user_has_a_todo_When_I_delete_it_Then_it_is_gone(self):
         """test user model method to delete a single todo"""
         from .models import Tag
         from .models import TodoUser
@@ -210,8 +210,6 @@ class TodoItemModelTests(ModelTests):
         self.assertEqual(todos, 2)
         
         
-        
-        
     def test_inserting_2_todoitems_with_same_tags_when_I_ask_for_tag_todos_then_I_get_2(self):
         from .models import Tag
         from .models import TodoItem
@@ -234,6 +232,7 @@ class TodoItemModelTests(ModelTests):
         self.assertEqual(tag.name, u'quest')
         self.assertEqual(len(tag.todos), 2)
 
+
     @unittest.skip('skip because it raises IntegrityError')        
     def test_inserting_multiple_todoitems_with_same_tags_using_addall_keep_tags_unique(self):
         from .models import Tag
@@ -254,7 +253,6 @@ class TodoItemModelTests(ModelTests):
         self.assertEqual(tag.name, u'quest')
         
 
-
 class TestHomeView(unittest.TestCase):
 
     def test_anonymous(self):
@@ -266,6 +264,7 @@ class TestHomeView(unittest.TestCase):
         self.assertEqual(response['user'], None)
         self.assertEqual(response['count'], None)
         self.assertEqual(response['section'], 'home')
+
         
 class TestTagsView(ModelTests):
     
@@ -294,5 +293,75 @@ class TestTagsView(ModelTests):
         for user_tag in user_tags:
             self.assertIn(user_tag.tag_name, tags, '%s should be one of these tags %s' % (user_tag, tags))
 
+class TestTagView(ModelTests):
+    
+    def test_todos_by_tag(self):
+        """return user todos that are tagged with given tag
         
-
+        saved IPython session to demonstrate SQLAlchemy API 
+        In [1]: from todopyramid.models import *
+    
+        In [2]: user = DBSession.query(TodoUser).filter_by(first_name='Sascha').one()
+        
+        In [3]: user.todos
+        Out[3]: 
+        [TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find another knight', [<todopyramid.models.Tag object at 0xb38eccc>], datetime.datetime(2014, 2, 2, 23, 0)),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find sascha', [<todopyramid.models.Tag object at 0xb38edac>], None)]
+        
+        In [4]: tag_filter = TodoItem.tags.any(Tag.name.in_([u'berlin']))
+        
+        In [5]: user.todo_list.filter(tag_filter).all()                 
+        Out[5]: 
+        [TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find sascha', [<todopyramid.models.Tag object at 0xb38edac>], None)]
+        
+        In [6]: user.todo_list.filter(tag_filter).order_by(Tag.name)
+        Out[6]: <sqlalchemy.orm.query.Query at 0xb51c38c>
+        
+        
+        In [8]: user.todo_list.filter(tag_filter).order_by(TodoItem.task).all()
+        Out[8]: 
+        [TodoItem(u's.gottfried@hhpberlin.de', u'find sascha', [<todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None)]
+        
+        In [9]: from sqlalchemy import asc
+        
+        In [10]: from sqlalchemy import desc
+        
+        In [11]: user.todo_list.filter(tag_filter).order_by(asc(TodoItem.task)).all()
+        Out[11]: 
+        [TodoItem(u's.gottfried@hhpberlin.de', u'find sascha', [<todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None)]
+        
+        In [12]: user.todo_list.filter(tag_filter).order_by(desc(TodoItem.task)).all()
+        Out[12]: 
+        [TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find sascha', [<todopyramid.models.Tag object at 0xb38edac>], None)]
+        
+        In [13]: user.todo_list.filter(tag_filter).order_by(desc(TodoItem.due_date)).all()
+        Out[13]: 
+        [TodoItem(u's.gottfried@hhpberlin.de', u'find sascha', [<todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None)]
+        
+        In [14]: user.todo_list.filter(tag_filter).order_by(asc(TodoItem.due_date)).all()
+        Out[14]: 
+        [TodoItem(u's.gottfried@hhpberlin.de', u'find sascha', [<todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None)]
+         
+        In [19]: tag_filter = TodoItem.tags.any(name=u'knight')
+        
+        In [20]: user.todo_list.filter(tag_filter).order_by(asc(TodoItem.due_date)).all()
+        Out[20]: 
+        [TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find tim', [<todopyramid.models.Tag object at 0xb38eccc>, <todopyramid.models.Tag object at 0xb38edac>], None),
+         TodoItem(u's.gottfried@hhpberlin.de', u'find another knight', [<todopyramid.models.Tag object at 0xb38eccc>], datetime.datetime(2014, 2, 2, 23, 0))]
+ 
+        """

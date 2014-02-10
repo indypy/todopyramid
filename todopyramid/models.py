@@ -103,6 +103,10 @@ class TodoItem(Base):
         compare to `utcnow` since dates are stored in UTC.
         """
         return self.due_date and self.due_date < datetime.utcnow()
+    
+    def __repr__(self):
+        """return representation - helps in IPython"""
+        return "TodoItem(%r, %r, %r, %r)" % (self.user, self.task, self.tags, self.due_date)
 
 
 class Tag(Base):
@@ -120,6 +124,10 @@ class Tag(Base):
 
     def __init__(self, name):
         self.name = name
+        
+    def __repr__(self):
+        """return representation - helps in IPython"""
+        return "Tag(%r)" % (self.name)        
 
 
 class TodoUser(Base):
@@ -141,6 +149,18 @@ class TodoUser(Base):
         self.first_name = first_name
         self.last_name = last_name
         self.time_zone = time_zone
+
+    
+    def todos_by_tag(self, tag, order):
+        """return user todos with given tag"""
+        tag_filter = TodoItem.tags.any(name=tag)
+        qry = self.todo_list.filter(tag_filter)
+    
+        if order:
+            qry.order_by(order)
+            
+        return qry.all() 
+    
 
     @property
     def user_tags(self):
@@ -192,11 +212,18 @@ class TodoUser(Base):
     def delete_todo(self, todo_id):
         """given a todo ID we delete it is contained in user todos 
         
-        there is another way to remove an item from a collection
+        delete from a collection
+        http://docs.sqlalchemy.org/en/latest/orm/session.html#deleting-from-collections
         http://stackoverflow.com/questions/10378468/deleting-an-object-from-collection-in-sqlalchemy"""
         todo_item = self.todo_list.filter(
                 TodoItem.id == todo_id)
 
         todo_item.delete()
+        
+    def update_prefs(self, first_name, last_name, time_zone=u'US/Eastern'):
+        """update account preferences""" 
+        self.first_name = first_name
+        self.last_name = last_name
+        self.time_zone = time_zone
     
     

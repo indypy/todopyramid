@@ -60,6 +60,8 @@ class ToDoViews(Layouts):
     def sort_order(self):
         """The list_view and tag_view both use this helper method to
         determine what the current sort parameters are.
+        
+        TODO: try to refactor using SQLAlchemy API or plain Python
         """
         order = self.request.GET.get('order_col', 'due_date')
         order_dir = self.request.GET.get('order_dir', 'asc')
@@ -240,7 +242,7 @@ class ToDoViews(Layouts):
         if 'submit' in self.request.POST:
             controls = self.request.POST.items()
             try:
-                form.validate(controls)
+                appstruct = form.validate(controls)
             except ValidationFailure as e:
                 msg = 'There was an error saving your settings.'
                 self.request.session.flash(msg, queue='error')
@@ -250,13 +252,9 @@ class ToDoViews(Layouts):
                     'js_resources': js_resources,
                     'section': section_name,
                 }
-            values = parse(self.request.params.items())
-            # Update the user
-            with transaction.manager:
-                self.user.first_name = values.get('first_name', u'')
-                self.user.last_name = values.get('last_name', u'')
-                self.user.time_zone = values.get('time_zone', u'US/Eastern')
-                DBSession.add(self.user)
+            
+            # Update the user with values from form/schema validation 
+            self.user.update_prefs(**appstruct)
             self.request.session.flash(
                 'Settings updated successfully',
                 queue='success',
@@ -343,7 +341,7 @@ class ToDoViews(Layouts):
         if self.user_id is None:
             count = None
         else:
-            count = self.user.todo_list.count()
+            count = len(self.user.todos)
         return {'user': self.user, 'count': count, 'section': 'home'}
 
     @view_config(route_name='list', renderer='templates/todo_list.pt',
@@ -412,9 +410,10 @@ class ToDoViews(Layouts):
         list of tags down to the tag selected in the url based on the
         tag route replacement marker that ends up in the `matchdict`.
         
-        Actually we can create tasks from this page as well.
-        That is why 'Add Task' form can submit to this view as well. 
-         
+        Why we ask for submit here?
+        Actually we can create tasks from the tag page as well.
+        That is why 'Add Task' modal form can submit to this view as well. 
+        
         """
         # Special case when the db was blown away
         if self.user_id is not None and self.user is None:
@@ -423,15 +422,15 @@ class ToDoViews(Layouts):
         if 'submit' in self.request.POST:
             return self.process_task_form(form)
 
-        #get params from request        
-        order = self.sort_order()
+        #get tag from request        
         tag_name = self.request.matchdict['tag_name']
         
-        #refactor: encapsulate it somewhere  
-        qry = self.user.todo_list.order_by(order)
-        tag_filter = TodoItem.tags.any(Tag.name.in_([tag_name]))
-        todo_items = qry.filter(tag_filter)
-        count = todo_items.count()
+        #get todos with given tag
+        #TODO: fix sorting with another approach as currently done
+        #do sorting
+        order = self.sort_order()
+        todo_items = self.user.todos_by_tag(tag_name, order)
+        count = len(todo_items)
         
         
         item_label = 'items' if count > 1 or count == 0 else 'item'

@@ -251,9 +251,9 @@ We will create a `TodoItem` and `Tag` model to start out with. This will give us
 
 ### Model Relationships
 
-Add notes about model relationships that support features offered by todopyramid.
+TBD - Add notes about model relationships that support features offered by todopyramid.
 
-### Explore model with IPython
+### Explore SQLAlchemy model with IPython
 
 ```
 $ bin/pshell production.ini

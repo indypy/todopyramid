@@ -47,10 +47,13 @@
           href="${request.static_url('deform:static/css/jquery-ui-timepicker-addon.css')}" />
     <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
           href="${request.static_url('deform_bootstrap_extra:static/jQuery-Tags-Input/jquery.tagsinput.css')}" />
-    <script src="${request.static_url('todopyramid:static/moment.min.js')}"></script>
+    
   </metal:css>
 
   <metal:js fill-slot="javascript">
+    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
+    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
+  	<script src="${request.static_url('todopyramid:static/moment.min.js')}"></script>
     <script src="${request.static_url('deform:static/scripts/jquery-ui-1.8.11.custom.min.js')}"></script>
     <script src="${request.static_url('deform:static/scripts/jquery-ui-timepicker-addon.js')}"></script>
     <script src="${request.static_url('deform_bootstrap_extra:static/jQuery-Tags-Input/jquery.tagsinput.min.js')}"></script>

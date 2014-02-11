@@ -163,6 +163,10 @@ class TodoItemModelTests(ModelTests):
     def test_constructor(self):
         instance = self._makeOne(1,
                                  u'Find a shrubbery')
+        #trigger model
+        instance.author
+        
+        #make assertions
         self.assertEqual(instance.user, 1)
         self.assertEqual(instance.task, u'Find a shrubbery')
         self.assertEqual(instance.due_date, None)

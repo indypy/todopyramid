@@ -15,6 +15,9 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from zope.sqlalchemy import ZopeTransactionExtension
 
+from .utils import localize_datetime
+from .utils import universify_datetime
+
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
@@ -46,8 +49,9 @@ class TodoItem(Base):
     __tablename__ = 'todoitems'
     id = Column(Integer, primary_key=True)
     task = Column(Text, nullable=False)
-    due_date = Column(DateTime)
+    _due_date = Column('due_date', DateTime)
     user = Column(Integer, ForeignKey('users.email'))
+    author = relationship('TodoUser')
     
     # # many to many TodoItem<->Tag
     tags = relationship("Tag", secondary=todoitemtag_table, backref="todos")
@@ -55,7 +59,7 @@ class TodoItem(Base):
     def __init__(self, user, task, tags=None, due_date=None):
         self.user = user
         self.task = task
-        self.due_date = due_date
+        self.due_date = due_date # date will be universified
         if tags is not None:
             self.apply_tags(tags)
 
@@ -101,8 +105,25 @@ class TodoItem(Base):
     def past_due(self):
         """Determine if this task is past its due date. Notice that we
         compare to `utcnow` since dates are stored in UTC.
+        
+        TODO: write tests
         """
-        return self.due_date and self.due_date < datetime.utcnow()
+        return self._due_date and self._due_date < datetime.utcnow()
+    
+    def universify_due_date(self, date):
+        """convert datetime to UTC for storage"""
+        if date is not None:
+            self._due_date = universify_datetime(date)
+        
+    def localize_due_date(self):
+        """create a timezone-aware object for a given datetime and timezone name
+        """
+        if self._due_date is not None and hasattr(self.author, 'time_zone'):
+            due_dt = localize_datetime(self._due_date, self.author.time_zone)
+            return due_dt
+        return self._due_date
+    
+    due_date = property(localize_due_date, universify_due_date)
     
     def __repr__(self):
         """return representation - helps in IPython"""
@@ -166,6 +187,8 @@ class TodoUser(Base):
     def user_tags(self):
         """Find all tags a user has created
         
+        BUG: does not find user created tags that actually have no related todos
+        
         returns KeyedTuples with key 'tag_name' 
         TODO: refactor to return collection of Tag model - consider lazy
         
@@ -220,6 +243,23 @@ class TodoUser(Base):
 
         todo_item.delete()
         
+    def create_todo(self, task, tags=None, due_date=None):
+        """may be we prefer using this method from authenticated views
+        this way we always create a user TodoItem instead of allowing view code to modify SQLAlchemy TodoItem collection 
+        """
+        #check common pitfall - mutable as default argument 
+        if tags==None:
+            tags = []
+            
+        todo = TodoItem(self.email, task, tags, due_date)
+        self.todos.append(todo)
+        
+    def edit_todo(self, todo_id, task, tags=None, due_date=None):
+        todo = self.todo_list.filter_by(id=todo_id).one()
+        todo.task = task
+        todo.apply_tags(tags)
+        todo.due_date = due_date
+    
     def update_prefs(self, first_name, last_name, time_zone=u'US/Eastern'):
         """update account preferences""" 
         self.first_name = first_name

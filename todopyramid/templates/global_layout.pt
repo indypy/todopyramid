@@ -13,7 +13,7 @@
     <!-- Generated resources -->
     <tal:resources repeat="css_path css_resources | []">
       <link rel="stylesheet" media="screen" type="text/css"
-            tal:attributes="href python: request.static_url(css_path)" />
+            href="${css_path}"/>
     </tal:resources>
 
     <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
@@ -28,16 +28,17 @@
 
     <!-- Le javascript, which unfortunately has to be at the top for Deform to work -->
     <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
+    
+	<!-- disabled for global layout because deform JS dependencies are injected by any deform form  
     <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
+    -->
 
     <!-- Generated Resources -->
     <tal:resources repeat="js_path js_resources | []">
-        <script type="text/javascript"
-                tal:attributes="src request.static_url(js_path)"></script>
+        <script type="text/javascript" src="${js_path}"></script>
     </tal:resources>
 
-    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
+    
 
     <metal:js define-slot="javascript"/>
 
@@ -50,14 +51,14 @@
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
-          <a class="brand" href="${request.application_url}">ToDo Pyramid</a>
+          <a class="brand" href="${request.route_url('home')}">ToDo Pyramid</a>
           <div class="nav-collapse collapse">
             <ul class="nav" >
-              <li tal:attributes="class section_name == 'home' and 'active' or ''"><a href="${request.application_url}">Home</a></li>
-              <li tal:attributes="class section_name == 'list' and 'active' or ''"><a href="${request.application_url}/list">List</a></li>
-              <li tal:attributes="class section_name == 'tags' and 'active' or ''"><a href="${request.application_url}/tags">Tags</a></li>
-              <li tal:attributes="class section_name == 'account' and 'active' or ''"><a href="${request.application_url}/account">My Account</a></li>
-              <li tal:attributes="class section_name == 'about' and 'active' or ''"><a href="${request.application_url}/about">About</a></li>
+              <li tal:attributes="class section_name == 'home' and 'active' or ''"><a href="${request.route_url('home')}">Home</a></li>
+              <li tal:attributes="class section_name == 'list' and 'active' or ''"><a href="${request.route_url('todos')}">List</a></li>
+              <li tal:attributes="class section_name == 'tags' and 'active' or ''"><a href="${request.route_url('tags')}">Tags</a></li>
+              <li tal:attributes="class section_name == 'account' and 'active' or ''"><a href="${request.route_url('account')}">Account</a></li>
+              <li tal:attributes="class section_name == 'about' and 'active' or ''"><a href="${request.route_url('about')}">About</a></li>
             </ul>
 
             <ul class="nav pull-right"

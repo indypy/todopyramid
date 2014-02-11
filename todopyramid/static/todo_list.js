@@ -12,8 +12,7 @@ $(function() {
         e.preventDefault();
         var todo_id = $(this).closest('ul').attr('id');
         $.getJSON(
-            '/edit.task',
-            {'id': todo_id},
+            '/todos/' + todo_id,
             function(json) {
                 if (json) {
                     edit_form = $('#task-form');

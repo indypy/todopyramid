@@ -118,7 +118,7 @@ class TodoGrid(ObjectGrid):
         span_class = 'due-date badge'
         if item.past_due:
             span_class += ' badge-important'
-        due_date = localize_datetime(item.due_date, self.user_tz)
+        due_date = localize_datetime(item._due_date, self.user_tz)
         span = HTML.tag(
             "span",
             c=HTML.literal(due_date.strftime('%Y-%m-%d %H:%M:%S')),

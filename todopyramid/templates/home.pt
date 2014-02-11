@@ -20,12 +20,12 @@
       <p>
         It is good to have you back<tal:greeting condition="user.first_name"> ${user.first_name}</tal:greeting>.
         <tal:workit condition="not done">
-          You have <a href="${request.application_url}/list" class="badge badge-success">${count}</a> task<tal:plural condition="count > 1">s</tal:plural> to take care of.
+          You have <a href="${request.route_url('todos')}" class="badge badge-success">${count}</a> task<tal:plural condition="count > 1">s</tal:plural> to take care of.
          <p>What are you going to get done today?</p>
         </tal:workit>
 
         <tal:done condition="done">
-          Well done, you have <a href="${request.application_url}/list" class="badge badge-success">${count}</a> tasks left to complete.
+          Well done, you have <a href="${request.route_url('todos')}" class="badge badge-success">${count}</a> tasks left to complete.
 
           <p>What's next?</p>
         </tal:done>

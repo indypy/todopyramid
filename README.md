@@ -1,5 +1,7 @@
 # ToDo Pyramid App
 
+[![Build Status](https://travis-ci.org/saschagottfried/todopyramid.svg?branch=master)](https://travis-ci.org/saschagottfried/todopyramid)
+
 This is a refactored version of the Pyramid app for the Python Web Shootout.
 Though it is not deployed to public yet, you can try original version here: <http://demo.todo.sixfeetup.com>
 

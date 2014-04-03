@@ -55,7 +55,7 @@ class TodoSchema(MappingSchema):
         description=(
             "Enter a comma after each tag to add it. Backspace to delete."
         ),
-        missing=[],
+        missing=None,
     )
     due_date = SchemaNode(
         deferred_datetime_node,

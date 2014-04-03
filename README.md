@@ -1,8 +1,7 @@
 # ToDo Pyramid App
 
-This is the Pyramid app for the Python Web Shootout.
-
-Try it out here: <http://demo.todo.sixfeetup.com>
+This is a refactored version of the Pyramid app for the Python Web Shootout.
+Though it is not deployed to public yet, you can try original version here: <http://demo.todo.sixfeetup.com>
 
 ## Install
 

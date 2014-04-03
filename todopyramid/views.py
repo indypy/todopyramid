@@ -11,7 +11,6 @@ from pyramid.decorator import reify
 
 from deform import Form
 from deform import ValidationFailure
-from peppercorn import parse
 from pyramid_deform import FormView
 from pyramid_persona.views import verify_login
 import transaction
@@ -229,6 +228,7 @@ class AccountEditView(BaseView, Layouts):
     """
     schema = SettingsSchema()
     buttons = ('save', 'cancel')
+    section = 'account' # current section of navbar
     
     def save_success(self, appstruct):
         """save button handler - called after successful validation 
@@ -304,7 +304,9 @@ class TodoItemForm(BaseView, Layouts):
         #TodoSchema colander schema and SQLAlchemy model TodoItem differ
         id = appstruct['id'] #hidden with colander.missing
         name = appstruct['name'] #required
-        tags = appstruct['tags'].split(',')  #optional with colander.missing, multiple tags are seperated with commas 
+        tags = appstruct['tags']
+        if tags:
+            tags = tags.split(',')  #optional with colander.missing, multiple tags are seperated with commas 
         due_date = appstruct['due_date'] #optional with colander.missing
         
         #encapsulate with try-except
@@ -336,17 +338,19 @@ class TodoItemForm(BaseView, Layouts):
 
     @view_config(route_name='todo', renderer='json', permission='view', xhr=True)
     def get_task(self):
-        """Get the task to fill in the edit form
+        """Get the task to fill in the bootbox edit form
         
+        returns multiple tags separated by comma to target deform_bootstrap_extra TagsWidget
         TODO: encapsulate datetime localization into model - done
         TODO: make datetime string configurable
         """
         todo_id = self.request.matchdict['todo_id']
         if todo_id is None:
             return False
-        task = self.user.todo_list.filter_by(id=todo_id).one()
         
+        task = self.user.todo_list.filter_by(id=todo_id).one()
         due_date = task.due_date.strftime('%Y-%m-%d %H:%M:%S') if task.due_date is not None else None
+        
         return dict(
             id=task.id,
             name=task.task,
@@ -355,26 +359,28 @@ class TodoItemForm(BaseView, Layouts):
         )
         
         
-    @view_config(renderer='json', name='delete.task', permission='view')
+    @view_config(route_name="delete.task", renderer='json', permission='view', xhr=True)
     def delete_task(self):
         """Delete a todo list item
 
         TODO: Add a guard here so that you can only delete your tasks - done
         """
-        todo_id = self.request.params.get('id', None)
-        if todo_id is not None:
-            self.user.delete_todo(todo_id)
+        todo_id = self.request.matchdict['todo_id']
+        if todo_id is None:
+            return False
+        
+        self.user.delete_todo(todo_id)
         return True
 
 
-    @view_config(renderer='json', name='tags.autocomplete', permission='view')
+    @view_config(route_name="tags.autocomplete", renderer='json', permission='view', xhr=True)
     def tag_autocomplete(self):
         """Get a list of dictionaries for the given term. This gives
         the tag input the information it needs to do auto completion.
         
         TODO: improve model to support user_tags - done
         """
-        term = self.request.params.get('term', '')
+        term = self.request.GET.get('term','')
         if len(term) < 2:
             return []
         
@@ -415,6 +421,7 @@ class TodoItemForm(BaseView, Layouts):
         """Override to inject TodoGrid and other stuff
         
         address both use cases by testing which route matched 
+        in contrast to original version I set both routes to highlight List menu item in navbar 
         """
         # Special case when the db was blown away
         if self.user_id is not None and self.user is None:
@@ -433,7 +440,7 @@ class TodoItemForm(BaseView, Layouts):
             
         grid = TodoGrid(
             self.request,
-            None,
+            tag_name,
             self.user.time_zone,
             todo_items,
             ['task', 'tags', 'due_date', ''],
@@ -446,7 +453,8 @@ class TodoItemForm(BaseView, Layouts):
             'page_title': page_title,
             'count': count,
             'item_label': item_label,
-            'section': 'list',
+            'tag_name' : tag_name,
+            'section' : 'list',
             'items': todo_items,
             'grid': grid,
         }

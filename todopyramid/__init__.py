@@ -27,7 +27,10 @@ def main(global_config, **settings):
     # Viewing todo lists
     config.add_route('todos', '/todos')
     config.add_route('tags', '/tags')
-    config.add_route('todo', '/todos/{todo_id}')
     config.add_route('taglist', '/tags/{tag_name}')
+    # AJAX
+    config.add_route('todo', '/todos/{todo_id}')
+    config.add_route('delete.task', '/delete.task/{todo_id}')
+    config.add_route('tags.autocomplete', '/tags.autocomplete')
     config.scan()
     return config.make_wsgi_app()

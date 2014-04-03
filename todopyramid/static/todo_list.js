@@ -15,7 +15,7 @@ $(function() {
             '/todos/' + todo_id,
             function(json) {
                 if (json) {
-                    edit_form = $('#task-form');
+                    var edit_form = $('#task-form');
                     // Set the title to Edit
                     edit_form.find('h3').text('Edit Task');
                     $.each(json, function(k, v) {
@@ -46,7 +46,7 @@ $(function() {
         });
     });
 
-    // Compete a todo task when the link is clicked
+    // Complete a todo task when the link is clicked
     $("a.todo-complete").click(function(e) {
         e.preventDefault();
         var todo_id = $(this).closest('ul').attr('id');
@@ -56,8 +56,7 @@ $(function() {
         bootbox.confirm(confirm_text, function(complete_item) {
             if (complete_item) {
                 $.getJSON(
-                    '/delete.task',
-                    {'id': todo_id},
+                    '/delete.task/'+ todo_id,
                     function(json) {
                         if (json) {
                             // Delete the row

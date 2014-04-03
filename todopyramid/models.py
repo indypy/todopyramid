@@ -68,11 +68,14 @@ class TodoItem(Base):
         creates the associated tag object. We strip off whitespace
         and lowercase the tags to keep a normalized list.
         """
-
+        #tags = []
         for tag_name in tags:
             tag_name = self.sanitize_tag(tag_name)
             tag = self._find_or_create_tag(tag_name)
             self.tags.append(tag)
+        
+        #reset collection of tags    
+        #self.tags = tags
             
     def sanitize_tag(self, tag_name):
         """tag name input validation"""
@@ -98,6 +101,7 @@ class TodoItem(Base):
         """Return a list of sorted tags for this task.
         
         TODO: we can apply sorting using the relationship 
+        TODO: order case-insensitive ??? 
         """
         return sorted(self.tags, key=lambda x: x.name)
 
@@ -203,6 +207,8 @@ class TodoUser(Base):
 
     def user_tags_autocomplete(self, term):
         """given a term return a unique collection (set) of user tags that start with it
+        
+        BUG: returns only tags currently applied to user todos, therefore missing tags related to deleted user todos
         
         
         In [19]: for todo in user.todos:

@@ -19,7 +19,7 @@ requires = [
     'pyramid_persona',
     'WebHelpers',
     'pytz',
-    'requests==1.1.0'
+    'requests==1.1.0',
 ]
 
 setup(

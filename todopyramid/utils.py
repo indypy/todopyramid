@@ -2,7 +2,7 @@ import pytz
 
 
 def localize_datetime(dt, tz_name):
-    """Provide a timzeone-aware object for a given datetime and timezone name
+    """Provide a timezone-aware object for a given datetime and timezone name
     """
     assert dt.tzinfo == None
     utc = pytz.timezone('UTC')

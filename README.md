@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/saschagottfried/todopyramid.svg?branch=master)](https://travis-ci.org/saschagottfried/todopyramid)
 
 This is a refactored version of the Pyramid app for the Python Web Shootout.
-Though it is not deployed to public yet, you can try original version here: <http://demo.todo.sixfeetup.com>
+
 
 ## Install
 
@@ -140,18 +140,18 @@ Then we need to pull in its dependencies (which includes Deform itself). Then up
 (todopyramid)$ pip freeze > requirements.txt
 ```
 
-Then add the static resources to the `__init__.py`
-
+Since we include deform_bootstrap_extra, it does all the static resources registration usually done manually in __init__.py
 ```
-# Adding the static resources from Deform
-config.add_static_view('deform_static', 'deform:static', cache_max_age=3600)
-config.add_static_view('deform_bootstrap_static', 'deform_bootstrap:static', cache_max_age=3600)
+pyramid.includes =
+    pyramid_tm
+    pyramid_persona
+    deform_bootstrap_extra
 ```
 
 Now we need to get our template structure in place. We'll add a `todopyramid/layouts.py` with the following (see the [Creating a Custom UX for Pyramid][customux] tutorial for more details):
 
 ```
-ifrom pyramid.renderers import get_renderer
+from pyramid.renderers import get_renderer
 from pyramid.decorator import reify
 
 
@@ -167,14 +167,18 @@ Add the `global_layout.pt` with at least the following (look at the source code 
 
 ```
 <!DOCTYPE html>
- <!-- The layout macro below is what is referenced in the layouts.Laytouts.global_template -->
+ <!-- The layout macro below is what is referenced in the layouts.Layouts.global_template -->
 <html lang="en" metal:define-macro="layout">
   <head>
 
     <!-- Styles from Deform Bootstrap -->
-    <link rel="stylesheet" href="${request.static_url('deform_bootstrap:static/deform_bootstrap.css')}" type="text/css" media="screen" charset="utf-8" />
-    <link rel="stylesheet" href="${request.static_url('deform_bootstrap:static/chosen_bootstrap.css')}" type="text/css" media="screen" charset="utf-8" />
-    <link rel="stylesheet" href="${request.static_url('deform:static/css/ui-lightness/jquery-ui-1.8.11.custom.css')}" type="text/css" media="screen" charset="utf-8" />
+	<link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('deform_bootstrap:static/deform_bootstrap.css')}" />
+    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('todopyramid:static/bootglyph/css/icon.css')}" />	
+    
+    <!-- jQuery --> 
+    <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
   </head>
 
   <body>
@@ -185,17 +189,10 @@ Add the `global_layout.pt` with at least the following (look at the source code 
         </div>
     </div>
 
-    <!-- The javascript resources from Deform -->
-    <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-1.8.18.custom.min.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-timepicker-addon-0.9.9.js')}"></script>
-    <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap-datepicker.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap-typeahead.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery.form-2.96.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery.maskedinput-1.3.js')}"></script>
+    <!-- Persona, loading at the bottom because it takes forever -->
+    <script src="https://login.persona.org/include.js" type="text/javascript"></script>
+    <script type="text/javascript">${request.persona_js}</script>
+    
   </body>
 </html>
 ```
@@ -288,7 +285,7 @@ Out[4]: u'king.arthur@example.com'
 
 ### Sorting
 
-TodoGrid can be ordered by task name & due date - ascending and descending.  
+TodoPyramids TodoGrid can order a rendered list of TodoItems by task name & due date - ascending and descending.  
 
 
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html

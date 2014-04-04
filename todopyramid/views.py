@@ -18,14 +18,12 @@ import transaction
 from .grid import TodoGrid
 from .scripts.initializedb import create_dummy_content
 from .layouts import Layouts
-from .models import DBSession
 from .models import Tag
 from .models import TodoItem
 from .models import TodoUser
 from .schema import SettingsSchema
 from .schema import TodoSchema
-from .utils import localize_datetime
-from .utils import universify_datetime
+
 
 
 from sqlalchemy.exc import OperationalError as SqlAlchemyOperationalError
@@ -53,7 +51,7 @@ def get_user(request):
     if user_id is not None:
         # this should return None if the user doesn't exist
         # in the database
-        return request.db.query(TodoUser).filter(TodoUser.email == user_id).one()
+        return request.db.query(TodoUser).filter(TodoUser.email == user_id).first()
 
             
 
@@ -77,6 +75,9 @@ class ToDoViews(Layouts):
         tasks, and shows that number on the home page with a link to
         the `list_view`.
         """
+        
+        #we have a home_view test that does not attach our user to our request
+        #FIX with enhanced testing strategies
         count = len(self.request.user.todos) if self.request.user else None
             
         return {'user': self.request.user, 
@@ -148,7 +149,8 @@ class ToDoViews(Layouts):
         email = verify_login(self.request)
         headers = remember(self.request, email)
         # Check to see if the user exists
-        user = DBSession.query(TodoUser).filter(
+        session = self.request.db
+        user = session.query(TodoUser).filter(
             TodoUser.email == email).first()
         if user and user.profile_complete:
             self.request.session.flash('Logged in successfully')
@@ -163,10 +165,9 @@ class ToDoViews(Layouts):
             settings.get('todopyramid.generate_content', None)
         )
         # Create the skeleton user
-        with transaction.manager:
-            DBSession.add(TodoUser(email))
-            if generate_content:
-                create_dummy_content(email)
+        session.add(TodoUser(email))
+        if generate_content:
+            create_dummy_content(email)
         msg = (
             "This is your first visit, we hope your stay proves to be "
             "prosperous. Before you begin, please update your profile."

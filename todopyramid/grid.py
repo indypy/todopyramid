@@ -114,13 +114,15 @@ class TodoGrid(ObjectGrid):
 
     def due_date_td(self, col_num, i, item):
         """Generate the column for the due date.
+        
+        Time-Zone Localization is done in the model
         """
         if item.due_date is None:
             return HTML.td('')
         span_class = 'due-date badge'
         if item.past_due:
             span_class += ' badge-important'
-        due_date = localize_datetime(item._due_date, self.user_tz)
+        due_date = item.due_date 
         span = HTML.tag(
             "span",
             c=HTML.literal(due_date.strftime('%Y-%m-%d %H:%M:%S')),

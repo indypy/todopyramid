@@ -1,6 +1,6 @@
 from pyramid.httpexceptions import HTTPFound
 from pyramid.response import Response
-from pyramid.security import authenticated_userid
+from pyramid.security import unauthenticated_userid
 from pyramid.security import remember
 from pyramid.security import forget
 from pyramid.settings import asbool
@@ -28,6 +28,35 @@ from .utils import localize_datetime
 from .utils import universify_datetime
 
 
+from sqlalchemy.exc import OperationalError as SqlAlchemyOperationalError
+
+@view_config(context=SqlAlchemyOperationalError)
+def failed_sqlalchemy(exception, request):
+    """catch missing database, logout and redirect to homepage, add flash message with error
+    
+    implementation inspired by pylons group message 
+    https://groups.google.com/d/msg/pylons-discuss/BUtbPrXizP4/0JhqB2MuoL4J
+    """
+    msg = 'There was an error connecting to database'
+    request.session.flash(msg, queue='error')
+    headers = forget(request)
+    
+    # Send the user back home, everything else is protected  
+    return HTTPFound(request.route_url('home'), headers=headers)
+
+def get_user(request):
+    # the below line is just an example, use your own method of
+    # accessing a database connection here (this could even be another
+    # request property such as request.db, implemented using this same
+    # pattern).
+    user_id = unauthenticated_userid(request)
+    if user_id is not None:
+        # this should return None if the user doesn't exist
+        # in the database
+        return request.db.query(TodoUser).filter(TodoUser.email == user_id).one()
+
+            
+
 class ToDoViews(Layouts):
     """This class has all the views for our application. The Layouts
     base class has the master template set up.
@@ -37,11 +66,6 @@ class ToDoViews(Layouts):
         """Set some common variables needed for each view.
         """
         self.request = request
-        self.user_id = authenticated_userid(request)
-        self.user = None
-        if self.user_id is not None:
-            query = DBSession.query(TodoUser)
-            self.user = query.filter(TodoUser.email == self.user_id).first()
 
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(self):
@@ -53,14 +77,9 @@ class ToDoViews(Layouts):
         tasks, and shows that number on the home page with a link to
         the `list_view`.
         """
-        # Special case when the db was blown away
-        if self.user_id is not None and self.user is None:
-            return self.logout()
-        if self.user_id is None:
-            count = None
-        else:
-            count = len(self.user.todos)
-        return {'user': self.user, 
+        count = len(self.request.user.todos) if self.request.user else None
+            
+        return {'user': self.request.user, 
                 'count': count,
                 'section': 'home',
         }
@@ -73,9 +92,10 @@ class ToDoViews(Layouts):
         TODO: use request.route_url API to generate URLs in view code
         """
         # Special case when the db was blown away
-        if self.user_id is not None and self.user is None:
-            return self.logout()
-        tags = self.user.user_tags
+        #if self.user_id is not None and self.user is None:
+        #    return self.logout()
+        
+        tags = self.request.user.user_tags
         return {
             'section': 'tags',
             'count': len(tags),
@@ -156,16 +176,7 @@ class ToDoViews(Layouts):
 
 
 class BaseView(FormView):
-    """subclass view to return links to static CSS/JS resources"""   
-    
-    def __init__(self, request):
-        super(BaseView, self).__init__(request)
-        self.request = request
-        self.user_id = authenticated_userid(request)
-        self.user = None
-        if self.user_id is not None:
-            query = DBSession.query(TodoUser)
-            self.user = query.filter(TodoUser.email == self.user_id).first()
+    """subclass view to return links to static CSS/JS resources"""
     
     def __call__(self):
         """same as base class method but customizes links to JS/CSS resources  
@@ -234,7 +245,7 @@ class AccountEditView(BaseView, Layouts):
         """save button handler - called after successful validation 
         
         save validated user prefs and redirect to list view""" 
-        self.user.update_prefs(**appstruct)
+        self.request.user.update_prefs(**appstruct)
         self.request.session.flash(
             'Settings updated successfully',
             queue='success',
@@ -250,8 +261,11 @@ class AccountEditView(BaseView, Layouts):
         self.request.session.flash(msg, queue='error')
     
     def cancel_success(self, appstruct):
-        """cancel button handler redirects to todo list view"""        
-        return HTTPFound(self.request.route_url('todos'))
+        """cancel button handler redirects to todo list view"""
+        previous_page = self.request.referer
+        todos_page = self.request.route_url('todos')
+        
+        return HTTPFound(todos_page)
     
 
     def appstruct(self):
@@ -259,7 +273,7 @@ class AccountEditView(BaseView, Layouts):
         
         TODO: find out how to generate appstruct from model - sort of model binding API or helper"""
         
-        user = self.user
+        user = self.request.user
         return {'first_name': user.first_name,
                 'last_name': user.last_name,
                 'time_zone': user.time_zone}
@@ -312,11 +326,11 @@ class TodoItemForm(BaseView, Layouts):
         #encapsulate with try-except
         if id:
             #edit user todo
-            self.user.edit_todo(id, name, tags, due_date)
+            self.request.user.edit_todo(id, name, tags, due_date)
             action = 'updated'
         else:
             #create new user todo
-            self.user.create_todo(name, tags, due_date)
+            self.request.user.create_todo(name, tags, due_date)
             action = 'created'
         
         msg = "Task <b><i>%s</i></b> %s successfully" % (name, action)
@@ -348,7 +362,7 @@ class TodoItemForm(BaseView, Layouts):
         if todo_id is None:
             return False
         
-        task = self.user.todo_list.filter_by(id=todo_id).one()
+        task = self.request.user.todo_list.filter_by(id=todo_id).one()
         due_date = task.due_date.strftime('%Y-%m-%d %H:%M:%S') if task.due_date is not None else None
         
         return dict(
@@ -369,7 +383,7 @@ class TodoItemForm(BaseView, Layouts):
         if todo_id is None:
             return False
         
-        self.user.delete_todo(todo_id)
+        self.request.user.delete_todo(todo_id)
         return True
 
 
@@ -384,7 +398,7 @@ class TodoItemForm(BaseView, Layouts):
         if len(term) < 2:
             return []
         
-        tags = self.user.user_tags_autocomplete(term)
+        tags = self.request.user.user_tags_autocomplete(term)
         return [
             dict(id=tag.name, value=tag.name, label=tag.name)
             for tag in tags
@@ -395,7 +409,7 @@ class TodoItemForm(BaseView, Layouts):
         
         TODO: do we still need it after refactoring timezone conversion into model ???"""
         data = super(TodoItemForm, self).get_bind_data()
-        data.update({'user_tz': self.user.time_zone})
+        data.update({'user_tz': self.request.user.time_zone})
         return data
     
     def sort_order(self):
@@ -424,24 +438,24 @@ class TodoItemForm(BaseView, Layouts):
         in contrast to original version I set both routes to highlight List menu item in navbar 
         """
         # Special case when the db was blown away
-        if self.user_id is not None and self.user is None:
-            return self.logout()
+        #if self.user_id is not None and self.user is None:
+        #    return self.logout()
 
         order = self.sort_order()
         tag_name = self.request.matchdict.get('tag_name')
         if tag_name:
             #route match for todos-by-tag
-            todo_items = self.user.todos_by_tag(tag_name, order)
+            todo_items = self.request.user.todos_by_tag(tag_name, order)
             page_title = 'Tag List'
         else:
             #route match for todos
-            todo_items = self.user.todo_list.order_by(order).all()
+            todo_items = self.request.user.todo_list.order_by(order).all()
             page_title = 'ToDo List'    
             
         grid = TodoGrid(
             self.request,
             tag_name,
-            self.user.time_zone,
+            self.request.user.time_zone,
             todo_items,
             ['task', 'tags', 'due_date', ''],
         )

@@ -17,7 +17,7 @@ import transaction
 
 from .grid import TodoGrid
 from .scripts.initializedb import create_dummy_content
-from .layouts import Layouts, menu_items
+from .layouts import Layouts
 from .models import Tag
 from .models import TodoItem
 from .models import TodoUser

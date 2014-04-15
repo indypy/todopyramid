@@ -25,6 +25,8 @@ def main(global_config, **settings):
     
     includeme(config)
 
+    # scan modules for config descriptors
+    config.scan()
     return config.make_wsgi_app()
     
     
@@ -57,5 +59,4 @@ def includeme(config):
     # http://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/auth/user_object.html
     config.add_request_method(get_user, 'user', reify=True)    
     
-    # scan modules for config descriptors
-    config.scan()
+

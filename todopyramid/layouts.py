@@ -1,23 +1,6 @@
 from pyramid.renderers import get_renderer
 from pyramid.decorator import reify
 
-#i18n/l10n is another topic to be handled for menu items
-class SiteMenu(list):
-    """mutable, ordered list of navbar menu items"""
-    
-    def __init__(self, request):
-        """Set some common variables needed for each view.
-        """
-        self.request = request        
-    
-    def populate(self, menu_items):
-        for k,v in menu_items.items():
-            self.add_item(k,v)
-    
-    def add_item(self, title, route):
-        new_item = {'title':title, 'route':route}
-        self.append(new_item)
-        
         
 #ToDoPyramid currently highlights navbar item 'todos' for multiple routes
 #Original version implemented navbar highlighting by setting a section variable 

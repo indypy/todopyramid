@@ -17,7 +17,7 @@ import transaction
 
 from .grid import TodoGrid
 from .scripts.initializedb import create_dummy_content
-from .layouts import Layouts
+from .layouts import Layouts, menu_items
 from .models import Tag
 from .models import TodoItem
 from .models import TodoUser
@@ -58,12 +58,9 @@ def get_user(request):
 class ToDoViews(Layouts):
     """This class has all the views for our application. The Layouts
     base class has the master template set up.
-    """
-
-    def __init__(self, request):
-        """Set some common variables needed for each view.
-        """
-        self.request = request
+    """    
+            
+        
 
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(self):
@@ -122,6 +119,8 @@ class ToDoViews(Layouts):
         a page that they don't have permission to see. In the same way
         that the notfound view is set up, this will fit nicely into our
         global layout.
+        
+        We just set the section to control visibility of person login button in navbar  
         """
         return {'section': 'login'}
 
@@ -447,7 +446,7 @@ class TodoItemForm(BaseView, Layouts):
         if tag_name:
             #route match for todos-by-tag
             todo_items = self.request.user.todos_by_tag(tag_name, order)
-            page_title = 'Tag List'
+            page_title = 'ToDo List by Tag'
         else:
             #route match for todos
             todo_items = self.request.user.todo_list.order_by(order).all()

@@ -22,6 +22,17 @@ def main(global_config, **settings):
         settings=settings,
         root_factory='todopyramid.models.RootFactory',
     )
+    
+    includeme(config)
+
+    return config.make_wsgi_app()
+    
+    
+def includeme(config):
+    """we use this concept to include routes and configuration setup in test cases
+    
+    http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/testing.html#creating-integration-tests
+    """
     config.add_static_view('static', 'static', cache_max_age=3600)
     
     # Misc. views
@@ -44,8 +55,7 @@ def main(global_config, **settings):
     
     # Making A User Object Available as a Request Attribute
     # http://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/auth/user_object.html
-    config.add_request_method(get_user, 'user', reify=True)
+    config.add_request_method(get_user, 'user', reify=True)    
     
     # scan modules for config descriptors
     config.scan()
-    return config.make_wsgi_app()

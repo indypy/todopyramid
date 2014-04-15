@@ -260,18 +260,22 @@ class TodoItemModelTests(ModelTests):
         self.assertEqual(tag.name, u'quest')
         
 
-class TestHomeView(unittest.TestCase):
+class ViewIntegrationTests(unittest.TestCase):
 
-    @unittest.skip('skip because view uses self.request.user provided by config.add_request_method')
+    #@unittest.skip('skip because view uses self.request.user provided by config.add_request_method')
     def test_anonymous(self):
         from .views import ToDoViews
         
-        request = testing.DummyRequest()
-        inst = ToDoViews(request)
-        response = inst.home_view()
-        self.assertEqual(response['user'], None)
-        self.assertEqual(response['count'], None)
-        self.assertEqual(response['section'], 'home')
+        with testing.testConfig() as config:
+            config.include('todopyramid')
+        
+            request = testing.DummyRequest()
+            request.user = None
+            inst = ToDoViews(request)
+            response = inst.home_view()
+            self.assertEqual(response['user'], None)
+            self.assertEqual(response['count'], None)
+            self.assertEqual(response['section'], 'home')
 
         
 class TestTagsView(ModelTests):

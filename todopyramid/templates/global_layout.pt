@@ -45,11 +45,7 @@
           <a class="brand" href="${request.route_url('home')}">ToDo Pyramid</a>
           <div class="nav-collapse collapse">
             <ul class="nav" >
-              <li tal:attributes="class section_name == 'home' and 'active' or ''"><a href="${request.route_url('home')}">Home</a></li>
-              <li tal:attributes="class section_name == 'list' and 'active' or ''"><a href="${request.route_url('todos')}">List</a></li>
-              <li tal:attributes="class section_name == 'tags' and 'active' or ''"><a href="${request.route_url('tags')}">Tags</a></li>
-              <li tal:attributes="class section_name == 'account' and 'active' or ''"><a href="${request.route_url('account')}">Account</a></li>
-              <li tal:attributes="class section_name == 'about' and 'active' or ''"><a href="${request.route_url('about')}">About</a></li>
+             <li tal:attributes="class 'active' if menu.active==True else ''" tal:repeat="menu view.navbar"><a href="${menu.url}">${menu.title}</a></li>              	
             </ul>
 
             <ul class="nav pull-right"

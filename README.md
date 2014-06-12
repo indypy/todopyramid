@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/saschagottfried/todopyramid.svg?branch=master)](https://travis-ci.org/saschagottfried/todopyramid)
 
-This is a refactored version of the Pyramid app for the Python Web Shootout.
+This is a refactored version of the Pyramid app for the Python Web Shootout originally crafted by SixFeetUp.
+
+Try it out here: <http://todopyramid-sgottfried.rhcloud.com/>
 
 
 ## Install

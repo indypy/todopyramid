@@ -1,149 +1,104 @@
 from pyramid.httpexceptions import HTTPFound
 from pyramid.response import Response
-from pyramid.security import authenticated_userid
+from pyramid.security import unauthenticated_userid
 from pyramid.security import remember
 from pyramid.security import forget
 from pyramid.settings import asbool
 from pyramid.view import forbidden_view_config
 from pyramid.view import notfound_view_config
 from pyramid.view import view_config
+from pyramid.decorator import reify
 
 from deform import Form
 from deform import ValidationFailure
-from peppercorn import parse
+from pyramid_deform import FormView
 from pyramid_persona.views import verify_login
 import transaction
 
 from .grid import TodoGrid
 from .scripts.initializedb import create_dummy_content
 from .layouts import Layouts
-from .models import DBSession
 from .models import Tag
 from .models import TodoItem
 from .models import TodoUser
 from .schema import SettingsSchema
 from .schema import TodoSchema
-from .utils import localize_datetime
-from .utils import universify_datetime
 
+
+
+from sqlalchemy.exc import OperationalError as SqlAlchemyOperationalError
+
+@view_config(context=SqlAlchemyOperationalError)
+def failed_sqlalchemy(exception, request):
+    """catch missing database, logout and redirect to homepage, add flash message with error
+    
+    implementation inspired by pylons group message 
+    https://groups.google.com/d/msg/pylons-discuss/BUtbPrXizP4/0JhqB2MuoL4J
+    """
+    msg = 'There was an error connecting to database'
+    request.session.flash(msg, queue='error')
+    headers = forget(request)
+    
+    # Send the user back home, everything else is protected  
+    return HTTPFound(request.route_url('home'), headers=headers)
+
+def get_user(request):
+    # the below line is just an example, use your own method of
+    # accessing a database connection here (this could even be another
+    # request property such as request.db, implemented using this same
+    # pattern).
+    user_id = unauthenticated_userid(request)
+    if user_id is not None:
+        # this should return None if the user doesn't exist
+        # in the database
+        return request.db.query(TodoUser).filter(TodoUser.email == user_id).first()
+
+            
 
 class ToDoViews(Layouts):
     """This class has all the views for our application. The Layouts
     base class has the master template set up.
-    """
+    """    
+            
+        
 
-    def __init__(self, context, request):
-        """Set some common variables needed for each view.
-        """
-        self.context = context
-        self.request = request
-        self.user_id = authenticated_userid(request)
-        self.todo_list = []
-        self.user = None
-        if self.user_id is not None:
-            query = DBSession.query(TodoUser)
-            self.user = query.filter(TodoUser.email == self.user_id).first()
+    @view_config(route_name='home', renderer='templates/home.pt')
+    def home_view(self):
+        """This is the first page the user will see when coming to the
+        application. If they are anonymous, the count is None and the
+        template shows some enticing welcome text.
 
-    def form_resources(self, form):
-        """Get a list of css and javascript resources for a given form.
-        These are then used to place the resources in the global layout.
+        If the user is logged in, then this gets a count of the user's
+        tasks, and shows that number on the home page with a link to
+        the `list_view`.
         """
-        resources = form.get_widget_resources()
-        js_resources = resources['js']
-        css_resources = resources['css']
-        js_links = ['deform:static/%s' % r for r in js_resources]
-        css_links = ['deform:static/%s' % r for r in css_resources]
-        return (css_links, js_links)
-
-    def sort_order(self):
-        """The list_view and tag_view both use this helper method to
-        determine what the current sort parameters are.
-        """
-        order = self.request.GET.get('order_col', 'due_date')
-        order_dir = self.request.GET.get('order_dir', 'asc')
-        if order == 'due_date':
-            # handle sorting of NULL values so they are always at the end
-            order = 'CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date'
-        if order == 'task':
-            # Sort ignoring case
-            order += ' COLLATE NOCASE'
-        if order_dir:
-            order = ' '.join([order, order_dir])
-        return order
-
-    def generate_task_form(self, formid="deform"):
-        """This helper code generates the form that will be used to add
-        and edit the tasks based on the schema of the form.
-        """
-        schema = TodoSchema().bind(user_tz=self.user.time_zone)
-        options = """
-        {success:
-          function (rText, sText, xhr, form) {
-            deform.processCallbacks();
-            deform.focusFirstInput();
-            var loc = xhr.getResponseHeader('X-Relocate');
-            if (loc) {
-              document.location = loc;
-            };
-           }
+        
+        #we have a home_view test that does not attach our user to our request
+        #FIX with enhanced testing strategies
+        count = len(self.request.user.todos) if self.request.user else None
+            
+        return {'user': self.request.user, 
+                'count': count,
+                'section': 'home',
         }
-        """
-        return Form(
-            schema,
-            buttons=('submit',),
-            formid=formid,
-            use_ajax=True,
-            ajax_options=options,
-        )
 
-    def process_task_form(self, form):
-        """This helper code processes the task from that we have
-        generated from Colander and Deform.
-
-        This handles both the initial creation and subsequent edits for
-        a task.
+    @view_config(route_name='tags', renderer='templates/todo_tags.pt',
+                permission='view')
+    def tags_view(self):
+        """This view simply shows all of the tags a user has created.
+        
+        TODO: use request.route_url API to generate URLs in view code
         """
-        try:
-            # try to validate the submitted values
-            controls = self.request.POST.items()
-            captured = form.validate(controls)
-            action = 'created'
-            with transaction.manager:
-                tags = captured.get('tags', [])
-                if tags:
-                    tags = tags.split(',')
-                due_date = captured.get('due_date')
-                if due_date is not None:
-                    # Convert back to UTC for storage
-                    due_date = universify_datetime(due_date)
-                task_name = captured.get('name')
-                task = TodoItem(
-                    user=self.user_id,
-                    task=task_name,
-                    tags=tags,
-                    due_date=due_date,
-                )
-                task_id = captured.get('id')
-                if task_id is not None:
-                    action = 'updated'
-                    task.id = task_id
-                DBSession.merge(task)
-            msg = "Task <b><i>%s</i></b> %s successfully" % (task_name, action)
-            self.request.session.flash(msg, queue='success')
-            # Reload the page we were on
-            location = self.request.url
-            return Response(
-                '',
-                headers=[
-                    ('X-Relocate', location),
-                    ('Content-Type', 'text/html'),
-                ]
-            )
-            html = form.render({})
-        except ValidationFailure as e:
-            # the submitted values could not be validated
-            html = e.render()
-        return Response(html)
+        # Special case when the db was blown away
+        #if self.user_id is not None and self.user is None:
+        #    return self.logout()
+        
+        tags = self.request.user.user_tags
+        return {
+            'section': 'tags',
+            'count': len(tags),
+            'tags': tags,
+        }
 
     @view_config(route_name='about', renderer='templates/about.pt')
     def about_view(self):
@@ -164,6 +119,8 @@ class ToDoViews(Layouts):
         a page that they don't have permission to see. In the same way
         that the notfound view is set up, this will fit nicely into our
         global layout.
+        
+        We just set the section to control visibility of person login button in navbar  
         """
         return {'section': 'login'}
 
@@ -176,7 +133,7 @@ class ToDoViews(Layouts):
         """
         headers = forget(self.request)
         # Send the user back home, everything else is protected
-        return HTTPFound('/', headers=headers)
+        return HTTPFound(self.request.route_url('home'), headers=headers)
 
     @view_config(route_name='login', check_csrf=True)
     def login_view(self):
@@ -191,7 +148,8 @@ class ToDoViews(Layouts):
         email = verify_login(self.request)
         headers = remember(self.request, email)
         # Check to see if the user exists
-        user = DBSession.query(TodoUser).filter(
+        session = self.request.db
+        user = session.query(TodoUser).filter(
             TodoUser.email == email).first()
         if user and user.profile_complete:
             self.request.session.flash('Logged in successfully')
@@ -199,237 +157,335 @@ class ToDoViews(Layouts):
         elif user and not user.profile_complete:
             msg = "Before you begin, please update your profile."
             self.request.session.flash(msg, queue='info')
-            return HTTPFound('/account', headers=headers)
+            return HTTPFound(self.request.route_url('account'), headers=headers)
         # Otherwise, create an account and optionally create some content
         settings = self.request.registry.settings
         generate_content = asbool(
             settings.get('todopyramid.generate_content', None)
         )
         # Create the skeleton user
-        with transaction.manager:
-            DBSession.add(TodoUser(email))
-            if generate_content:
-                create_dummy_content(email)
+        session.add(TodoUser(email))
+        if generate_content:
+            create_dummy_content(email)
         msg = (
             "This is your first visit, we hope your stay proves to be "
             "prosperous. Before you begin, please update your profile."
         )
         self.request.session.flash(msg)
-        return HTTPFound('/account', headers=headers)
+        return HTTPFound(self.request.route_url('account'), headers=headers)
 
-    @view_config(route_name='account', renderer='templates/account.pt',
-                permission='view')
-    def account_view(self):
-        """This is the settings form for the user. The first time a
-        user logs in, they are taken here so we can get their first and
-        last name.
+
+class BaseView(FormView):
+    """subclass view to return links to static CSS/JS resources"""
+    
+    def __call__(self):
+        """same as base class method but customizes links to JS/CSS resources  
+        
+        Prepares and render the form according to provided options.
+
+        Upon receiving a ``POST`` request, this method will validate
+        the request against the form instance. After validation, 
+        this calls a method based upon the name of the button used for
+        form submission and whether the validation succeeded or failed.
+        If the button was named ``save``, then :meth:`save_success` will be
+        called on successful validation or :meth:`save_failure` will
+        be called upon failure. An exception to this is when no such
+        ``save_failure`` method is present; in this case, the fallback
+        is :meth:`failure``. 
+        
+        Returns a ``dict`` structure suitable for provision tog the given
+        view. By default, this is the page template specified 
         """
-        # Special case when the db was blown away
-        if self.user_id is not None and self.user is None:
-            return self.logout()
-        section_name = 'account'
-        schema = SettingsSchema()
-        form = Form(schema, buttons=('submit',))
-        css_resources, js_resources = self.form_resources(form)
-        if 'submit' in self.request.POST:
-            controls = self.request.POST.items()
-            try:
-                form.validate(controls)
-            except ValidationFailure as e:
-                msg = 'There was an error saving your settings.'
-                self.request.session.flash(msg, queue='error')
-                return {
-                    'form': e.render(),
-                    'css_resources': css_resources,
-                    'js_resources': js_resources,
-                    'section': section_name,
-                }
-            values = parse(self.request.params.items())
-            # Update the user
-            with transaction.manager:
-                self.user.first_name = values.get('first_name', u'')
-                self.user.last_name = values.get('last_name', u'')
-                self.user.time_zone = values.get('time_zone', u'US/Eastern')
-                DBSession.add(self.user)
-            self.request.session.flash(
-                'Settings updated successfully',
-                queue='success',
-            )
-            return HTTPFound('/list')
-        # Get existing values
-        if self.user is not None:
-            appstruct = dict(
-                first_name=self.user.first_name,
-                last_name=self.user.last_name,
-                time_zone=self.user.time_zone,
-            )
-        else:
-            appstruct = {}
-        return {
-            'form': form.render(appstruct),
-            'css_resources': css_resources,
-            'js_resources': js_resources,
-            'section': section_name,
+        use_ajax = getattr(self, 'use_ajax', False)
+        ajax_options = getattr(self, 'ajax_options', '{}')
+        self.schema = self.schema.bind(**self.get_bind_data())
+        form = self.form_class(self.schema, buttons=self.buttons,
+                               use_ajax=use_ajax, ajax_options=ajax_options,
+                               **dict(self.form_options))
+        self.before(form)
+        reqts = form.get_widget_resources()
+        result = None
+
+        for button in form.buttons:
+            if button.name in self.request.POST:
+                success_method = getattr(self, '%s_success' % button.name)
+                try:
+                    controls = self.request.POST.items()
+                    validated = form.validate(controls)
+                    result = success_method(validated)
+                except ValidationFailure as e:
+                    fail = getattr(self, '%s_failure' % button.name, None)
+                    if fail is None:
+                        fail = self.failure
+                    result = fail(e)
+                break
+
+        if result is None:
+            result = self.show(form)
+
+        if isinstance(result, dict):
+            result['js_resources'] = [self.request.static_url('deform:static/%s' % r) for r in reqts['js']]
+            result['css_resources'] = [self.request.static_url('deform:static/%s' % r) for r in reqts['css']]
+
+        return result
+
+
+@view_config(route_name='account', renderer='templates/account.pt', permission='view')
+class AccountEditView(BaseView, Layouts):
+    """view class for account from
+    
+    inherits from BaseView to get customized JS/CSS resources behaviour 
+    inherits from Layout to use global TodoPyramid template
+    """
+    schema = SettingsSchema()
+    buttons = ('save', 'cancel')
+    section = 'account' # current section of navbar
+    
+    def save_success(self, appstruct):
+        """save button handler - called after successful validation 
+        
+        save validated user prefs and redirect to list view""" 
+        self.request.user.update_prefs(**appstruct)
+        self.request.session.flash(
+            'Settings updated successfully',
+            queue='success',
+        )
+        return HTTPFound(self.request.route_url('home'))
+    
+    def save_failure(self, exc):
+        """save button failure handler - called after validation failure
+        
+        add custom message as flash message and render form
+        TODO: investigate exception"""
+        msg = 'There was an error saving your settings.'
+        self.request.session.flash(msg, queue='error')
+    
+    def cancel_success(self, appstruct):
+        """cancel button handler redirects to todo list view"""
+        previous_page = self.request.referer
+        todos_page = self.request.route_url('todos')
+        
+        return HTTPFound(todos_page)
+    
+
+    def appstruct(self):
+        """This allows edit forms to pre-fill form values conveniently.
+        
+        TODO: find out how to generate appstruct from model - sort of model binding API or helper"""
+        
+        user = self.request.user
+        return {'first_name': user.first_name,
+                'last_name': user.last_name,
+                'time_zone': user.time_zone}
+
+
+@view_config(route_name="taglist", renderer='templates/todo_list.pt', permission='view')
+@view_config(route_name='todos', renderer='templates/todo_list.pt', permission='view')
+class TodoItemForm(BaseView, Layouts):
+    """view class to renderer all user todos or todos-by-tag - use case depends on matched route
+     
+    responsibilities
+    * render TaskForm
+    * render TodoGrid
+    * care about sort_order
+    * edit task AJAX
+    * delete task AJAX
+    * feed AutoComplete Ajax Widget
+    """
+    schema = TodoSchema()
+    buttons = ('save',)
+    form_options = (('formid', 'deform'),)
+    use_ajax = True
+    ajax_options = """
+        {success:
+          function (rText, sText, xhr, form) {
+            deform.processCallbacks();
+            deform.focusFirstInput();
+            var loc = xhr.getResponseHeader('X-Relocate');
+            if (loc) {
+              document.location = loc;
+            };
+           }
         }
-
-    @view_config(renderer='json', name='tags.autocomplete', permission='view')
-    def tag_autocomplete(self):
-        """Get a list of dictionaries for the given term. This gives
-        the tag input the information it needs to do auto completion.
+    """
+    def save_success(self, appstruct):
+        """save button handler
+        
+        handle create/edit action and redirect to page
+        
+        TODO: pass appstruct as **kwargs to domain method 
         """
-        term = self.request.params.get('term', '')
-        if len(term) < 2:
-            return []
-        # XXX: This is global tags, need to hook into "user_tags"
-        tags = DBSession.query(Tag).filter(Tag.name.startswith(term)).all()
-        return [
-            dict(id=tag.name, value=tag.name, label=tag.name)
-            for tag in tags
-        ]
+        #TodoSchema colander schema and SQLAlchemy model TodoItem differ
+        id = appstruct['id'] #hidden with colander.missing
+        name = appstruct['name'] #required
+        tags = appstruct['tags']
+        if tags:
+            tags = tags.split(',')  #optional with colander.missing, multiple tags are seperated with commas 
+        due_date = appstruct['due_date'] #optional with colander.missing
+        
+        #encapsulate with try-except
+        if id:
+            #edit user todo
+            self.request.user.edit_todo(id, name, tags, due_date)
+            action = 'updated'
+        else:
+            #create new user todo
+            self.request.user.create_todo(name, tags, due_date)
+            action = 'created'
+        
+        msg = "Task <b><i>%s</i></b> %s successfully" % (name, action)
+        self.request.session.flash(msg, queue='success')
+        
+        #reload the current page
+        location = self.request.url
+        return Response(
+            '',
+            headers=[
+                ('X-Relocate', location),
+                ('Content-Type', 'text/html'),
+            ]
+        )
+        
+    def update_success(self):
+        """target create/edit use cases with different button handlers"""
+        pass
 
-    @view_config(renderer='json', name='edit.task', permission='view')
-    def edit_task(self):
-        """Get the values to fill in the edit form
+    @view_config(route_name='todo', renderer='json', permission='view', xhr=True)
+    def get_task(self):
+        """Get the task to fill in the bootbox edit form
+        
+        returns multiple tags separated by comma to target deform_bootstrap_extra TagsWidget
+        TODO: encapsulate datetime localization into model - done
+        TODO: make datetime string configurable
         """
-        todo_id = self.request.params.get('id', None)
+        todo_id = self.request.matchdict['todo_id']
         if todo_id is None:
             return False
-        task = DBSession.query(TodoItem).filter(
-            TodoItem.id == todo_id).first()
-        due_date = None
-        # If there is a due date, localize the time
-        if task.due_date is not None:
-            due_dt = localize_datetime(task.due_date, self.user.time_zone)
-            due_date = due_dt.strftime('%Y-%m-%d %H:%M:%S')
+        
+        task = self.request.user.todo_list.filter_by(id=todo_id).one()
+        due_date = task.due_date.strftime('%Y-%m-%d %H:%M:%S') if task.due_date is not None else None
+        
         return dict(
             id=task.id,
             name=task.task,
             tags=','.join([tag.name for tag in task.sorted_tags]),
             due_date=due_date,
         )
-
-    @view_config(renderer='json', name='delete.task', permission='view')
+        
+        
+    @view_config(route_name="delete.task", renderer='json', permission='view', xhr=True)
     def delete_task(self):
         """Delete a todo list item
 
-        TODO: Add a guard here so that you can only delete your tasks
+        TODO: Add a guard here so that you can only delete your tasks - done
         """
-        todo_id = self.request.params.get('id', None)
-        if todo_id is not None:
-            todo_item = DBSession.query(TodoItem).filter(
-                TodoItem.id == todo_id)
-            with transaction.manager:
-                todo_item.delete()
+        todo_id = self.request.matchdict['todo_id']
+        if todo_id is None:
+            return False
+        
+        self.request.user.delete_todo(todo_id)
         return True
 
-    @view_config(route_name='home', renderer='templates/home.pt')
-    def home_view(self):
-        """This is the first page the user will see when coming to the
-        application. If they are anonymous, the count is None and the
-        template shows some enticing welcome text.
 
-        If the user is logged in, then this gets a count of the user's
-        tasks, and shows that number on the home page with a link to
-        the `list_view`.
+    @view_config(route_name="tags.autocomplete", renderer='json', permission='view', xhr=True)
+    def tag_autocomplete(self):
+        """Get a list of dictionaries for the given term. This gives
+        the tag input the information it needs to do auto completion.
+        
+        TODO: improve model to support user_tags - done
+        """
+        term = self.request.GET.get('term','')
+        if len(term) < 2:
+            return []
+        
+        tags = self.request.user.user_tags_autocomplete(term)
+        return [
+            dict(id=tag.name, value=tag.name, label=tag.name)
+            for tag in tags
+        ]
+        
+    def get_bind_data(self):
+        """deferred binding of user time zone
+        
+        TODO: do we still need it after refactoring timezone conversion into model ???"""
+        data = super(TodoItemForm, self).get_bind_data()
+        data.update({'user_tz': self.request.user.time_zone})
+        return data
+    
+    def sort_order(self):
+        """The list_view and tag_view both use this helper method to
+        determine what the current sort parameters are.
+        
+        TODO: try to refactor using SQLAlchemy API or plain Python
+        """
+        order = self.request.GET.get('order_col', 'due_date')
+        order_dir = self.request.GET.get('order_dir', 'asc')
+        if order == 'due_date':
+            # handle sorting of NULL values so they are always at the end
+            order = 'CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date'
+        if order == 'task':
+            # Sort ignoring case
+            order += ' COLLATE NOCASE'
+        if order_dir:
+            order = ' '.join([order, order_dir])
+        return order    
+
+    
+    def show(self, form):
+        """Override to inject TodoGrid and other stuff
+        
+        address both use cases by testing which route matched 
+        in contrast to original version I set both routes to highlight List menu item in navbar 
         """
         # Special case when the db was blown away
-        if self.user_id is not None and self.user is None:
-            return self.logout()
-        if self.user_id is None:
-            count = None
+        #if self.user_id is not None and self.user is None:
+        #    return self.logout()
+
+        order = self.sort_order()
+        tag_name = self.request.matchdict.get('tag_name')
+        if tag_name:
+            #route match for todos-by-tag
+            todo_items = self.request.user.todos_by_tag(tag_name, order)
+            page_title = 'ToDo List by Tag'
         else:
-            count = len(self.user.todo_list.all())
-        return {'user': self.user, 'count': count, 'section': 'home'}
-
-    @view_config(route_name='list', renderer='templates/todo_list.pt',
-                permission='view')
-    def list_view(self):
-        """This is the main functional page of our application. It
-        shows a listing of the tasks that the currently logged in user
-        has created.
-        """
-        # Special case when the db was blown away
-        if self.user_id is not None and self.user is None:
-            return self.logout()
-        form = self.generate_task_form()
-        if 'submit' in self.request.POST:
-            return self.process_task_form(form)
-        order = self.sort_order()
-        todo_items = self.user.todo_list.order_by(order).all()
-        grid = TodoGrid(
-            self.request,
-            None,
-            self.user.time_zone,
-            todo_items,
-            ['task', 'tags', 'due_date', ''],
-        )
-        count = len(todo_items)
-        item_label = 'items' if count > 1 or count == 0 else 'item'
-        css_resources, js_resources = self.form_resources(form)
-        return {
-            'page_title': 'Todo List',
-            'count': count,
-            'item_label': item_label,
-            'section': 'list',
-            'items': todo_items,
-            'grid': grid,
-            'form': form.render(),
-            'css_resources': css_resources,
-            'js_resources': js_resources,
-        }
-
-    @view_config(route_name='tags', renderer='templates/todo_tags.pt',
-                permission='view')
-    def tags_view(self):
-        """This view simply shows all of the tags a user has created.
-        """
-        # Special case when the db was blown away
-        if self.user_id is not None and self.user is None:
-            return self.logout()
-        tags = self.user.user_tags
-        return {
-            'section': 'tags',
-            'count': len(tags),
-            'tags': tags,
-        }
-
-    @view_config(route_name='tag', renderer='templates/todo_list.pt',
-                 permission='view')
-    def tag_view(self):
-        """Very similar to the list_view, this view just filters the
-        list of tags down to the tag selected in the url based on the
-        tag route replacement marker that ends up in the `matchdict`.
-        """
-        # Special case when the db was blown away
-        if self.user_id is not None and self.user is None:
-            return self.logout()
-        form = self.generate_task_form()
-        if 'submit' in self.request.POST:
-            return self.process_task_form(form)
-        order = self.sort_order()
-        qry = self.user.todo_list.order_by(order)
-        tag_name = self.request.matchdict['tag_name']
-        tag_filter = TodoItem.tags.any(Tag.name.in_([tag_name]))
-        todo_items = qry.filter(tag_filter)
-        count = todo_items.count()
-        item_label = 'items' if count > 1 or count == 0 else 'item'
+            #route match for todos
+            todo_items = self.request.user.todo_list.order_by(order).all()
+            page_title = 'ToDo List'    
+            
         grid = TodoGrid(
             self.request,
             tag_name,
-            self.user.time_zone,
+            self.request.user.time_zone,
             todo_items,
             ['task', 'tags', 'due_date', ''],
         )
-        css_resources, js_resources = self.form_resources(form)
-        return {
-            'page_title': 'Tag List',
+        
+        count = len(todo_items)
+        item_label = 'items' if count > 1 or count == 0 else 'item'
+        
+        todos = {
+            'page_title': page_title,
             'count': count,
             'item_label': item_label,
-            'section': 'tags',
-            'tag_name': tag_name,
+            'tag_name' : tag_name,
+            'section' : 'list',
             'items': todo_items,
             'grid': grid,
-            'form': form.render({'tags': tag_name}),
-            'css_resources': css_resources,
-            'js_resources': js_resources,
         }
+        
+
+        #copied from FormView.show        
+        appstruct = self.appstruct()
+        if appstruct is None:
+            rendered = form.render()
+        else:
+            rendered = form.render(appstruct)
+        taskform = {
+            'form': rendered,
+            }
+        
+        
+        #merge and return to renderer
+        todos.update(taskform)
+        return todos    
+        

@@ -1,8 +1,11 @@
 # ToDo Pyramid App
 
-This is the Pyramid app for the Python Web Shootout.
+[![Build Status](https://travis-ci.org/saschagottfried/todopyramid.svg?branch=master)](https://travis-ci.org/saschagottfried/todopyramid)
 
-Try it out here: <http://demo.todo.sixfeetup.com>
+This is a refactored version of the Pyramid app for the Python Web Shootout originally crafted by SixFeetUp.
+
+Try it out here: <http://todopyramid-sgottfried.rhcloud.com/>
+
 
 ## Install
 
@@ -139,18 +142,18 @@ Then we need to pull in its dependencies (which includes Deform itself). Then up
 (todopyramid)$ pip freeze > requirements.txt
 ```
 
-Then add the static resources to the `__init__.py`
-
+Since we include deform_bootstrap_extra, it does all the static resources registration usually done manually in __init__.py
 ```
-# Adding the static resources from Deform
-config.add_static_view('deform_static', 'deform:static', cache_max_age=3600)
-config.add_static_view('deform_bootstrap_static', 'deform_bootstrap:static', cache_max_age=3600)
+pyramid.includes =
+    pyramid_tm
+    pyramid_persona
+    deform_bootstrap_extra
 ```
 
 Now we need to get our template structure in place. We'll add a `todopyramid/layouts.py` with the following (see the [Creating a Custom UX for Pyramid][customux] tutorial for more details):
 
 ```
-ifrom pyramid.renderers import get_renderer
+from pyramid.renderers import get_renderer
 from pyramid.decorator import reify
 
 
@@ -166,14 +169,18 @@ Add the `global_layout.pt` with at least the following (look at the source code 
 
 ```
 <!DOCTYPE html>
- <!-- The layout macro below is what is referenced in the layouts.Laytouts.global_template -->
+ <!-- The layout macro below is what is referenced in the layouts.Layouts.global_template -->
 <html lang="en" metal:define-macro="layout">
   <head>
 
     <!-- Styles from Deform Bootstrap -->
-    <link rel="stylesheet" href="${request.static_url('deform_bootstrap:static/deform_bootstrap.css')}" type="text/css" media="screen" charset="utf-8" />
-    <link rel="stylesheet" href="${request.static_url('deform_bootstrap:static/chosen_bootstrap.css')}" type="text/css" media="screen" charset="utf-8" />
-    <link rel="stylesheet" href="${request.static_url('deform:static/css/ui-lightness/jquery-ui-1.8.11.custom.css')}" type="text/css" media="screen" charset="utf-8" />
+	<link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('deform_bootstrap:static/deform_bootstrap.css')}" />
+    <link rel="stylesheet" type="text/css" media="screen" charset="utf-8"
+          href="${request.static_url('todopyramid:static/bootglyph/css/icon.css')}" />	
+    
+    <!-- jQuery --> 
+    <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
   </head>
 
   <body>
@@ -184,17 +191,10 @@ Add the `global_layout.pt` with at least the following (look at the source code 
         </div>
     </div>
 
-    <!-- The javascript resources from Deform -->
-    <script src="${request.static_url('deform:static/scripts/jquery-1.7.2.min.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-1.8.18.custom.min.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery-ui-timepicker-addon-0.9.9.js')}"></script>
-    <script src="${request.static_url('deform:static/scripts/deform.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/deform_bootstrap.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap.min.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap-datepicker.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/bootstrap-typeahead.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery.form-2.96.js')}"></script>
-    <script src="${request.static_url('deform_bootstrap:static/jquery.maskedinput-1.3.js')}"></script>
+    <!-- Persona, loading at the bottom because it takes forever -->
+    <script src="https://login.persona.org/include.js" type="text/javascript"></script>
+    <script type="text/javascript">${request.persona_js}</script>
+    
   </body>
 </html>
 ```
@@ -207,9 +207,9 @@ from .layouts import Layouts
 
 class ToDoViews(Layouts):
 
-    def __init__(self, context, request):
-        self.context = context
+    def __init__(self, request):
         self.request = request
+        self.context = request.context
 
     @view_config(route_name='home', renderer='templates/home.pt')
     def home_view(request):
@@ -220,7 +220,7 @@ class ToDoViews(Layouts):
 Now we can add a `todopyramid/templates/home.pt` to our app with the following
 
 ```
-<metal: master use-macro="view.global_template">
+<metal:master use-macro="view.global_template">
   <div metal:fill-slot="content">
     <h1>Home</h1>
     <p>Welcome to the Pyramid version of the ToDo app.</p>
@@ -247,6 +247,48 @@ In order to keep up appearances, we add a custom Not Found view that integrates 
 Now that we have created the shell for our app, it is time to create some models. We will be utilizing [SQLAlchemy][sqlalchemy] in this case since it fits the needs of our application.
 
 We will create a `TodoItem` and `Tag` model to start out with. This will give us the basis for our todo list.
+
+
+### Model Relationships
+
+TBD - Add notes about model relationships that support features offered by todopyramid.
+
+### Explore SQLAlchemy model with IPython
+
+```
+$ bin/pshell production.ini
+Adding asdict2() to Colander.
+Python 2.7.2+ (default, Jul 20 2012, 22:12:53) 
+Type "copyright", "credits" or "license" for more information.
+
+IPython 0.13.1 -- An enhanced Interactive Python.
+?         -> Introduction and overview of IPython's features.
+%quickref -> Quick reference.
+help      -> Python's own help system.
+object?   -> Details about 'object', use 'object??' for extra details.
+
+Environment:
+  app          The WSGI application.
+  registry     Active Pyramid registry.
+  request      Active request object.
+  root         Root of the default resource tree.
+  root_factory Default root factory used to create `root`.
+
+In [1]: from todopyramid.models import DBSession, TodoUser
+
+In [2]: user = DBSession.query(TodoUser).filter_by(first_name='Arthur').one()
+
+In [3]: user
+Out[3]: <todopyramid.models.TodoUser at 0xa73cb8c>
+
+In [4]: user.email
+Out[4]: u'king.arthur@example.com'
+```
+
+### Sorting
+
+TodoPyramids TodoGrid can order a rendered list of TodoItems by task name & due date - ascending and descending.  
+
 
 [install]: http://pyramid.readthedocs.org/en/latest/narr/install.html
 [deform]: http://docs.pylonsproject.org/projects/deform/en/latest/

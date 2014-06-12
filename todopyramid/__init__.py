@@ -6,6 +6,11 @@ from .models import (
     Base,
     )
 
+from .views import get_user
+
+def get_db_session(request):
+    """return thread-local DB session"""
+    return DBSession
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
@@ -17,29 +22,41 @@ def main(global_config, **settings):
         settings=settings,
         root_factory='todopyramid.models.RootFactory',
     )
-    config.include('pyramid_persona')
-    config.include('deform_bootstrap_extra')
+    
+    includeme(config)
+
+    # scan modules for config descriptors
+    config.scan()
+    return config.make_wsgi_app()
+    
+    
+def includeme(config):
+    """we use this concept to include routes and configuration setup in test cases
+    
+    http://docs.pylonsproject.org/projects/pyramid/en/latest/narr/testing.html#creating-integration-tests
+    """
     config.add_static_view('static', 'static', cache_max_age=3600)
-    # Adding the static resources from Deform
-    config.add_static_view(
-        'deform_static', 'deform:static', cache_max_age=3600
-    )
-    config.add_static_view(
-        'deform_bootstrap_static', 'deform_bootstrap:static',
-        cache_max_age=3600
-    )
-    config.add_static_view(
-        'deform_bootstrap_extra_static', 'deform_bootstrap_extra:static',
-        cache_max_age=3600
-    )
+    
     # Misc. views
     config.add_route('home', '/')
     config.add_route('about', '/about')
     # Users
     config.add_route('account', '/account')
     # Viewing todo lists
-    config.add_route('list', '/list')
+    config.add_route('todos', '/todos')
     config.add_route('tags', '/tags')
-    config.add_route('tag', '/tags/{tag_name}')
-    config.scan()
-    return config.make_wsgi_app()
+    config.add_route('taglist', '/tags/{tag_name}')
+    # AJAX
+    config.add_route('todo', '/todos/{todo_id}')
+    config.add_route('delete.task', '/delete.task/{todo_id}')
+    config.add_route('tags.autocomplete', '/tags.autocomplete')
+    
+    # make DB session a request attribute
+    # http://blog.safaribooksonline.com/2014/01/07/building-pyramid-applications/
+    config.add_request_method(get_db_session, 'db', reify=True)
+    
+    # Making A User Object Available as a Request Attribute
+    # http://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/auth/user_object.html
+    config.add_request_method(get_user, 'user', reify=True)    
+    
+

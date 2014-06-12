@@ -38,6 +38,8 @@ def deferred_datetime_node(node, kw):
 class TodoSchema(MappingSchema):
     """This is the form schema used for list_view and tag_view. This is
     the basis for the add and edit form for tasks.
+    
+    TODO: schema.TodoSchema.name != models.TodoItem.task
     """
     id = SchemaNode(
         Integer(),
@@ -53,7 +55,7 @@ class TodoSchema(MappingSchema):
         description=(
             "Enter a comma after each tag to add it. Backspace to delete."
         ),
-        missing=[],
+        missing=None,
     )
     due_date = SchemaNode(
         deferred_datetime_node,

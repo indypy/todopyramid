@@ -1,1 +1,3 @@
 todopyramid.sqlite
+*.pyc
+*.egg-info

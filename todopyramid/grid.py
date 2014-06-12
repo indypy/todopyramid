@@ -95,11 +95,13 @@ class TodoGrid(ObjectGrid):
 
     def tags_td(self, col_num, i, item):
         """Generate the column for the tags.
+        
+        Apply special tag CSS for currently selected tag matched route '/tags/{tag_name}' 
         """
         tag_links = []
 
         for tag in item.sorted_tags:
-            tag_url = '%s/tags/%s' % (self.request.application_url, tag.name)
+            tag_url = self.request.route_url('taglist', tag_name=tag.name)
             tag_class = 'label'
             if self.selected_tag and tag.name == self.selected_tag:
                 tag_class += ' label-warning'
@@ -112,13 +114,15 @@ class TodoGrid(ObjectGrid):
 
     def due_date_td(self, col_num, i, item):
         """Generate the column for the due date.
+        
+        Time-Zone Localization is done in the model
         """
         if item.due_date is None:
             return HTML.td('')
         span_class = 'due-date badge'
         if item.past_due:
             span_class += ' badge-important'
-        due_date = localize_datetime(item.due_date, self.user_tz)
+        due_date = item.due_date 
         span = HTML.tag(
             "span",
             c=HTML.literal(due_date.strftime('%Y-%m-%d %H:%M:%S')),

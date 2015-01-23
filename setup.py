@@ -21,6 +21,13 @@ requires = [
     'pytz',
 ]
 
+extras_require = {
+    'testing': [
+        'nose',
+        'coverage',
+    ],
+}
+
 setup(
     name='todopyramid',
     version='1.0',
@@ -41,6 +48,7 @@ setup(
     zip_safe=False,
     test_suite='todopyramid',
     install_requires=requires,
+    extras_require=extras_require,
     entry_points="""\
     [paste.app_factory]
     main = todopyramid:main

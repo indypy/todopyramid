@@ -15,3 +15,11 @@ class TestTodoItem(unittest.TestCase):
         model = TodoItem(user='bob', task='go do stuff')
         self.assertEqual(model.user, 'bob')
         self.assertEqual(model.task, 'go do stuff')
+
+    def test_edit_todo(self):
+        from .models import TodoItem
+        model = TodoItem(user='bob', task='go do stuff')
+        model.task = 'time for a beverage'
+        self.assertEqual(model.user, 'bob')
+        self.assertEqual(model.task, 'time for a beverage')
+

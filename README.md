@@ -139,7 +139,7 @@ Then we need to pull in its dependencies (which includes Deform itself). Then up
 (todopyramid)$ pip freeze > requirements.txt
 ```
 
-Then add the static resources to the `__init__.py`
+Then add the static resources to the `todopyramid/__init__.py` after `config.add_static_view('static', 'static', cache_max_age=3600)`
 
 ```
 # Adding the static resources from Deform
@@ -150,7 +150,7 @@ config.add_static_view('deform_bootstrap_static', 'deform_bootstrap:static', cac
 Now we need to get our template structure in place. We'll add a `todopyramid/layouts.py` with the following (see the [Creating a Custom UX for Pyramid][customux] tutorial for more details):
 
 ```
-ifrom pyramid.renderers import get_renderer
+from pyramid.renderers import get_renderer
 from pyramid.decorator import reify
 
 
@@ -162,7 +162,7 @@ class Layouts(object):
         return renderer.implementation().macros['layout']
 ```
 
-Add the `global_layout.pt` with at least the following (look at the source code for the complete template):
+Add the `templates/global_layout.pt` with at least the following (look at the source code for the complete template):
 
 ```
 <!DOCTYPE html>
